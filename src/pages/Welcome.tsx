@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useParentAuth } from '../auth/ParentAuthContext';
 import { createParentPin, validatePinFormat } from '../auth/pin';
 import { Background } from '../components/Background';
@@ -14,17 +13,17 @@ type Step = 'hello' | 'pin' | 'confirm' | 'recovery' | 'players' | 'custom';
 export function Welcome() {
   const { refresh, selectProfile } = useApp();
   const { grant } = useParentAuth();
-  const navigate = useNavigate();
   const [step, setStep] = useState<Step>('hello');
   const [firstPin, setFirstPin] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [recovery, setRecovery] = useState('');
   const [saved, setSaved] = useState(false);
 
+  // Once refresh() sees the new PIN, the /welcome route redirects into the arcade
+  // (home if a player is selected, otherwise the player picker). One redirect path only.
   const finish = async (profileId?: string) => {
-    await refresh();
     if (profileId) await selectProfile(profileId);
-    navigate(profileId ? '/' : '/profiles', { replace: true });
+    await refresh();
   };
 
   return (

@@ -43,7 +43,7 @@ describe('first run', () => {
     await user.click(screen.getByRole('checkbox', { name: /wrote it down/i }));
     await user.click(next);
     await user.click(screen.getByRole('button', { name: /afa & terdoo/i }));
-    expect(await screen.findByRole('heading', { name: /who's playing/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: /who's playing/i })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /terdoo/i }));
     expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('Terdoo');
   });
