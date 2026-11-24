@@ -23,7 +23,7 @@ In headless Chromium (desktop 1280×720 / 1366×768 and Pixel 7 emulation, portr
 - Touch buttons appear on the phone viewport.
 
 ## 3. Tests executed and results
-- Vitest: 90/90 passed (new: level grids are valid, every world has a start, gate, crystal, secret and checkpoints, surprise blocks match their power-ups, ground objects stand on solid tiles, pits are jumpable or bridged, the tunnel fits Terdoo but not Afa, the boss cave has springs, both heroes can clear a 3-tile ledge, star rating, double-jump rules, world unlocks, best-result merging, resume clearing, badges from progress, catalog marks the game playable).
+- Vitest: 93/93 passed (new: quick key taps between frames are never lost, level grids are valid, every world has a start, gate, crystal, secret and checkpoints, surprise blocks match their power-ups, ground objects stand on solid tiles, pits are jumpable or bridged, the tunnel fits Terdoo but not Afa, the boss cave has springs, both heroes can clear a 3-tile ledge, star rating, double-jump rules, world unlocks, best-result merging, resume clearing, badges from progress, catalog marks the game playable).
 - Playwright: 16/16 passed (desktop + mobile), including the two new Afa & Terdoo journeys.
 - Type check and production build: pass.
 

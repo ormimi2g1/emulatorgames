@@ -30,6 +30,8 @@ export class GameInput {
   private pad = new Set<GameButton>();
   private prev = new Set<GameButton>();
   private now = new Set<GameButton>();
+  /** Presses since the last frame, so a quick tap between two frames is never lost. */
+  private tapped = new Set<GameButton>();
   private target: Window;
   enabled = true;
   onPad?: (status: PadStatus, name: string) => void;
@@ -49,6 +51,7 @@ export class GameInput {
     // Keep game keys from scrolling the page while playing.
     e.preventDefault();
     this.keys.add(b);
+    this.tapped.add(b);
   };
   private onKeyUp = (e: KeyboardEvent) => {
     const b = KEYMAP[e.code];
@@ -57,12 +60,16 @@ export class GameInput {
   private clearAll = () => {
     this.keys.clear();
     this.touch.clear();
+    this.tapped.clear();
   };
   private onPadConnected = (e: GamepadEvent) => this.onPad?.('connected', e.gamepad.id);
   private onPadDisconnected = (e: GamepadEvent) => this.onPad?.('disconnected', e.gamepad.id);
 
   setTouch(b: GameButton, down: boolean) {
-    if (down) this.touch.add(b);
+    if (down) {
+      this.touch.add(b);
+      this.tapped.add(b);
+    }
     else this.touch.delete(b);
   }
 
@@ -88,7 +95,8 @@ export class GameInput {
   update() {
     this.pollPads();
     this.prev = this.now;
-    this.now = new Set([...this.keys, ...this.touch, ...this.pad]);
+    this.now = new Set([...this.keys, ...this.touch, ...this.pad, ...this.tapped]);
+    this.tapped.clear();
   }
 
   isDown(b: GameButton): boolean {
