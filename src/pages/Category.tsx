@@ -1,23 +1,22 @@
 import { Link } from 'react-router-dom';
 import { GameCard } from '../components/GameCard';
-import { CATEGORIES, visibleGames } from '../games/catalog';
+import { CATEGORIES } from '../games/catalog';
 import type { GameCategory } from '../games/types';
-import { useApp } from '../state/AppContext';
+import { useArcadeGames } from '../state/AppContext';
 
 export function Category({ category }: { category: GameCategory }) {
-  const { activeProfile, settings } = useApp();
   const meta = CATEGORIES.find((c) => c.id === category)!;
-  const games = visibleGames(activeProfile, settings.disabledGames).filter((g) => g.category === category);
+  const games = useArcadeGames().filter((g) => g.category === category);
   return (
     <div className="flex flex-col gap-6">
       <h1 className="pt-2 text-3xl font-bold sm:text-4xl">
         <span aria-hidden="true">{meta.emoji}</span> {meta.label}
       </h1>
-      {category === 'retro' && (
+      {category === 'retro' && games.length === 0 && (
         <div className="card flex flex-wrap items-center gap-4 p-5">
           <span className="text-4xl" aria-hidden="true">👨‍👩‍👧</span>
           <p className="flex-1 text-lg">
-            Retro games are added by a grown-up using game files they own. The Retro Console arrives in the next updates.
+            Retro games are added by a grown-up, using game files they own. Ask a grown-up to add some in the Parent Zone!
           </p>
           <Link to="/parent" className="btn btn-ghost">Parent Zone</Link>
         </div>

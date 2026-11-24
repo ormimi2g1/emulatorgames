@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
 import { GameCard, GameRow } from '../components/GameCard';
 import { ACHIEVEMENTS } from '../data/achievements';
-import { CATEGORIES, visibleGames } from '../games/catalog';
+import { CATEGORIES } from '../games/catalog';
 import type { GameDefinition } from '../games/types';
-import { useApp } from '../state/AppContext';
+import { useApp, useArcadeGames } from '../state/AppContext';
 
-const FEATURED_IDS = ['afa-terdoo', 'retro-console', 'rainbow-kart'];
+const FEATURED_IDS = ['afa-terdoo', 'rainbow-kart'];
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -15,10 +15,11 @@ function greeting(): string {
 }
 
 export function Home() {
-  const { activeProfile, settings } = useApp();
-  const games = visibleGames(activeProfile, settings.disabledGames);
+  const { activeProfile } = useApp();
+  const games = useArcadeGames();
   const byIds = (ids: string[]) => ids.map((id) => games.find((g) => g.id === id)).filter(Boolean) as GameDefinition[];
-  const featured = byIds(FEATURED_IDS);
+  // Playable retro games lead the carousel, then the flagship originals.
+  const featured = [...games.filter((g) => g.retroId).slice(0, 3), ...byIds(FEATURED_IDS)];
   const recent = byIds((activeProfile?.recent ?? []).map((r) => r.gameId));
   const favorites = byIds(activeProfile?.favorites ?? []);
   const unlocked = ACHIEVEMENTS.filter((a) => activeProfile?.achievements.includes(a.id));

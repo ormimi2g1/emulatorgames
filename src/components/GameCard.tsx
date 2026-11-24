@@ -3,12 +3,14 @@ import { ageLabel, isPlayable } from '../games/catalog';
 import { Thumbnail } from '../games/Thumbnail';
 import type { GameDefinition } from '../games/types';
 import { useApp } from '../state/AppContext';
+import { RetroThumbnail } from '../retro/RetroThumbnail';
 
 const DIFF_LABEL: Record<string, string> = { 'little-explorer': 'Easy', adventurer: 'Medium', 'super-hero': 'Hard' };
 const CONTROL_ICON: Record<string, string> = { keyboard: '⌨️', touch: '👆', gamepad: '🎮' };
 
 export function GameCard({ game, size = 'md' }: { game: GameDefinition; size?: 'md' | 'lg' }) {
-  const { activeProfile, toggleFavorite } = useApp();
+  const { activeProfile, toggleFavorite, retroGames } = useApp();
+  const rom = game.retroId ? retroGames.find((r) => r.id === game.retroId) : undefined;
   const navigate = useNavigate();
   const playable = isPlayable(game);
   const fav = activeProfile?.favorites.includes(game.id) ?? false;
@@ -22,7 +24,7 @@ export function GameCard({ game, size = 'md' }: { game: GameDefinition; size?: '
       data-testid={`game-card-${game.id}`}
     >
       <div className={`relative aspect-video ${playable ? '' : 'saturate-50'}`}>
-        <Thumbnail gameId={game.id} title={game.title} />
+        {rom ? <RetroThumbnail romId={rom.id} title={rom.title} hasArt={rom.hasArt} /> : <Thumbnail gameId={game.id} title={game.title} />}
         {!playable && (
           <span className="absolute left-3 top-3 rounded-full bg-navy/85 px-3 py-1 text-sm font-bold text-sun">Coming soon</span>
         )}
@@ -48,7 +50,7 @@ export function GameCard({ game, size = 'md' }: { game: GameDefinition; size?: '
         </ul>
         <div className="mt-auto pt-1">
           {playable ? (
-            <button type="button" className="btn btn-sun w-full" onClick={() => navigate(`/play/${game.id}`)}>
+            <button type="button" className="btn btn-sun w-full" onClick={() => navigate(`/play/${encodeURIComponent(game.id)}`)}>
               ▶ Play
             </button>
           ) : (

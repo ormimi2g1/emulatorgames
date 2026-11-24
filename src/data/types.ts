@@ -75,3 +75,37 @@ export const DEFAULT_SETTINGS: AppSettings = {
   sfxVolume: 0.8,
   muted: false,
 };
+
+export interface RetroGame {
+  id: string;
+  system: string;
+  title: string;
+  fileName: string;
+  size: number;
+  sha256: string;
+  ageMin: number;
+  ageMax: number;
+  difficulty: Difficulty;
+  /** Parent switched it on for kids. Only possible after a successful test launch. */
+  enabled: boolean;
+  /** The emulator started this game successfully at least once. */
+  tested: boolean;
+  /** 'all' = every player, otherwise the listed profile ids. */
+  assignedProfiles: 'all' | string[];
+  hasArt: boolean;
+  addedAt: number;
+  updatedAt: number;
+}
+
+/** Slot 0 is the automatic "keep my spot" save; 1-3 are manual slots. */
+export interface SaveState {
+  id: string;
+  romId: string;
+  profileId: string;
+  slot: number;
+  data: ArrayBuffer;
+  savedAt: number;
+}
+
+export const SAVE_SLOTS = [1, 2, 3] as const;
+export const AUTO_SLOT = 0;

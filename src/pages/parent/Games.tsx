@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { GAMES, isPlayable } from '../../games/catalog';
 import { useApp } from '../../state/AppContext';
 
@@ -26,10 +27,7 @@ export function Games() {
       </section>
       <section className="card flex flex-col gap-2 p-5">
         <h2 className="text-xl font-bold">Retro games</h2>
-        <p>
-          Importing retro game files (.nes first) arrives with the Retro Console. You'll pick a game file you own from this device; it stays on this
-          device and is never uploaded. The arcade does not include or download any commercial games.
-        </p>
+        <p>Add, test and manage retro games under <Link to="/parent/retro" className="underline">Retro Games</Link>.</p>
       </section>
     </div>
   );

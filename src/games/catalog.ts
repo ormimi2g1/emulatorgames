@@ -24,22 +24,6 @@ export const GAMES: GameDefinition[] = [
     plannedPhase: 2,
   },
   {
-    id: 'retro-console',
-    title: 'Retro Console',
-    description: 'Play classic console games that a grown-up has added.',
-    category: 'retro',
-    ageMin: 4,
-    ageMax: 10,
-    difficulties: ['adventurer'],
-    controls: ['keyboard', 'touch', 'gamepad'],
-    players: { min: 1, max: 2 },
-    offline: true,
-    saves: true,
-    status: 'coming-soon',
-    version: '0.0.0',
-    plannedPhase: 3,
-  },
-  {
     id: 'rainbow-kart',
     title: 'Rainbow Kart Racing',
     description: 'Zoom around a candy-colored track and grab boosts.',
@@ -134,7 +118,7 @@ export function getGame(id: string): GameDefinition | undefined {
 }
 
 export function isPlayable(game: GameDefinition): boolean {
-  return game.status === 'available' && typeof game.load === 'function';
+  return game.status === 'available' && (typeof game.load === 'function' || !!game.retroId);
 }
 
 /** Games this profile may see: not disabled by the parent and assigned to the profile. */

@@ -20,6 +20,8 @@
     "react-router-dom": "^6.30.6"
   },
   "devDependencies": {
+    "@emulatorjs/core-fceumm": "^4.2.3",
+    "@emulatorjs/emulatorjs": "^4.2.3",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.5",
     "@testing-library/jest-dom": "^8.0.0",

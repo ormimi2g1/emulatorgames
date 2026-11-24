@@ -1,10 +1,9 @@
 import { GameCard } from '../components/GameCard';
-import { visibleGames } from '../games/catalog';
-import { useApp } from '../state/AppContext';
+import { useApp, useArcadeGames } from '../state/AppContext';
 
 export function MyGames() {
-  const { activeProfile, settings } = useApp();
-  const games = visibleGames(activeProfile, settings.disabledGames);
+  const { activeProfile } = useApp();
+  const games = useArcadeGames();
   const favs = games.filter((g) => activeProfile?.favorites.includes(g.id));
   const recentIds = (activeProfile?.recent ?? []).map((r) => r.gameId);
   const recent = recentIds.map((id) => games.find((g) => g.id === id)).filter((g) => !!g);

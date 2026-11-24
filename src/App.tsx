@@ -13,6 +13,8 @@ import { Data } from './pages/parent/Data';
 import { Games } from './pages/parent/Games';
 import { ParentZone } from './pages/parent/ParentZone';
 import { Profiles } from './pages/parent/Profiles';
+import { RetroGames } from './pages/parent/RetroGames';
+import { Play } from './pages/Play';
 import { Security } from './pages/parent/Security';
 import { Settings } from './pages/parent/Settings';
 import { AppProvider, useApp } from './state/AppContext';
@@ -51,11 +53,13 @@ export function AppRoutes() {
       <Route path="/welcome" element={<WelcomeRoute />} />
       <Route element={<RequireSetup />}>
         <Route path="/profiles" element={<ProfilePicker />} />
+        <Route path="/play/:gameId" element={<Play />} />
         <Route element={<Layout />}>
           <Route path="/parent" element={<ParentZone />}>
             <Route index element={<Dashboard />} />
             <Route path="profiles" element={<Profiles />} />
             <Route path="games" element={<Games />} />
+            <Route path="retro" element={<RetroGames />} />
             <Route path="settings" element={<Settings />} />
             <Route path="data" element={<Data />} />
             <Route path="security" element={<Security />} />
@@ -87,7 +91,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Providers>
         <AppRoutes />
         <UpdatePrompt />

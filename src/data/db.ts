@@ -1,5 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import type { AppSettings, ChildProfile, LockoutState, ParentAuthRecord } from './types';
+import type { AppSettings, ChildProfile, LockoutState, ParentAuthRecord, RetroGame, SaveState } from './types';
 
 /**
  * Local IndexedDB storage. All data stays on this device.
@@ -7,7 +7,7 @@ import type { AppSettings, ChildProfile, LockoutState, ParentAuthRecord } from '
  * profiles, saves and imported games survive app updates.
  */
 export const DB_NAME = 'kids-adventure-arcade';
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 
 export interface KvMap {
   settings: AppSettings;
@@ -19,6 +19,12 @@ export interface KvMap {
 interface ArcadeDB extends DBSchema {
   kv: { key: string; value: unknown };
   profiles: { key: string; value: ChildProfile };
+  /** Retro game details (small; listed often). */
+  romMeta: { key: string; value: RetroGame; indexes: { bySha: string } };
+  /** Retro game file bytes, kept apart from the details so lists stay fast. */
+  romData: { key: string; value: { id: string; data: ArrayBuffer } };
+  romArt: { key: string; value: { id: string; type: string; data: ArrayBuffer } };
+  saves: { key: string; value: SaveState; indexes: { byRom: string; byRomProfile: [string, string] } };
 }
 
 let dbPromise: Promise<IDBPDatabase<ArcadeDB>> | null = null;
@@ -31,7 +37,16 @@ export function getDb(): Promise<IDBPDatabase<ArcadeDB>> {
           db.createObjectStore('kv');
           db.createObjectStore('profiles', { keyPath: 'id' });
         }
-        // Future versions: add `if (oldVersion < 2) { ... }` blocks here.
+        if (oldVersion < 2) {
+          const meta = db.createObjectStore('romMeta', { keyPath: 'id' });
+          meta.createIndex('bySha', 'sha256', { unique: true });
+          db.createObjectStore('romData', { keyPath: 'id' });
+          db.createObjectStore('romArt', { keyPath: 'id' });
+          const saves = db.createObjectStore('saves', { keyPath: 'id' });
+          saves.createIndex('byRom', 'romId');
+          saves.createIndex('byRomProfile', ['romId', 'profileId']);
+        }
+        // Future versions: add `if (oldVersion < 3) { ... }` blocks here.
       },
       blocking() {
         // A newer version of the app opened the DB in another tab; close so it can upgrade.

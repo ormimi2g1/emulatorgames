@@ -15,7 +15,8 @@
 | Settings (theme, volume, hidden games) | IndexedDB `kv.settings` | |
 | Child profiles | IndexedDB `profiles` | Nickname, avatar, optional age range, difficulty, favorites, assigned games, accessibility, trophies. No real names, emails, birthdays, photos or locations. |
 | Active player | IndexedDB `kv.activeProfileId` | |
-| Imported retro games, save states | IndexedDB (Phase 3) | Never uploaded. |
+| Imported retro games | IndexedDB `romMeta` (details), `romData` (file bytes), `romArt` (picture) | Never uploaded. SHA-256 used to spot duplicates. |
+| Retro save states | IndexedDB `saves`, one per game × player × slot (0 = auto, 1–3 manual) | Deleted with the game or the player. |
 | Server-side data | none | |
 
 Schema changes are additive migrations in `src/data/db.ts` (`upgrade(oldVersion)`), so app updates keep existing data. The service worker only caches app files; it never touches IndexedDB.
@@ -33,3 +34,13 @@ Schema changes are additive migrations in `src/data/db.ts` (`upgrade(oldVersion)
 ## PWA
 
 `vite-plugin-pwa` generates the manifest and a Workbox service worker that precaches the app shell (works offline after first load). Updates wait for the user to tap **Update**.
+
+## Retro Console
+
+- EmulatorJS (NES core FCEUmm) is served from `public/emulatorjs/`; nothing loads from a CDN.
+- It runs in a same-origin iframe (`player.html`) with a strict Content Security Policy that only allows this app's own origin, so the emulator cannot contact netplay, update or tracking servers. Leaving the game removes the iframe, which stops its audio, loops and listeners.
+- The arcade sends the ROM bytes to the iframe with `postMessage`; save states come back the same way (`src/retro/emulatorBridge.ts`).
+- Import checks: supported system, file extension, size limit, and the iNES header (`src/retro/systems.ts`). Pictures are checked by their bytes (PNG/JPEG/WebP/GIF only, never SVG). Imported games start hidden; a parent must run **Test** successfully before switching a game on for kids.
+- Auto-save every 60 s, when the app goes to the background (it also pauses), and on exit. Next launch continues from the auto-save.
+- The service worker caches the console on first use (`retro-console` cache), so a game that has been played once also works offline.
+- Only NES is supported. SNES, Game Boy (Color/Advance) and Genesis are listed as "coming later" until their cores are added and tested.
