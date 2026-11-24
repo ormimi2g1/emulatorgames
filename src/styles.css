@@ -1,0 +1,190 @@
+@import 'tailwindcss';
+@import '@fontsource/fredoka/latin-400.css';
+@import '@fontsource/fredoka/latin-600.css';
+@import '@fontsource/fredoka/latin-700.css';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Fredoka', ui-rounded, system-ui, sans-serif;
+  --color-navy: #101936;
+  --color-navy-2: #1a2550;
+  --color-purple: #7357ff;
+  --color-sky: #38bdf8;
+  --color-sun: #ffd54a;
+  --color-grass: #49d17d;
+  --color-coral: #ff686b;
+}
+
+@layer base {
+  :root {
+    --bg: #eef4ff;
+    --surface: #ffffff;
+    --surface-2: #e4ebff;
+    --text: #101936;
+    --muted: #46507a;
+    --ring: #7357ff;
+    color-scheme: light;
+  }
+  :root.dark {
+    --bg: #101936;
+    --surface: #1a2550;
+    --surface-2: #24306a;
+    --text: #ffffff;
+    --muted: #b8c2ee;
+    --ring: #ffd54a;
+    color-scheme: dark;
+  }
+  :root.hc {
+    --bg: #000000;
+    --surface: #000000;
+    --surface-2: #111111;
+    --text: #ffffff;
+    --muted: #ffffff;
+    --ring: #ffd54a;
+  }
+  :root.hc .card,
+  :root.hc .btn {
+    outline: 3px solid #fff;
+  }
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+  :focus-visible {
+    outline: 4px solid var(--ring);
+    outline-offset: 3px;
+  }
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
+@layer components {
+  .card {
+    background: var(--surface);
+    border-radius: 1.75rem;
+    box-shadow: 0 10px 30px -12px rgb(16 25 54 / 0.35);
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 3.25rem;
+    padding: 0.6rem 1.4rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 1.125rem;
+    transition: transform 0.15s ease, filter 0.15s ease;
+    box-shadow: 0 5px 0 rgb(0 0 0 / 0.25);
+  }
+  .btn:active:not(:disabled) {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 rgb(0 0 0 / 0.25);
+  }
+  .btn:disabled {
+    filter: grayscale(0.7);
+    opacity: 0.6;
+  }
+  .btn-primary {
+    background: var(--color-purple);
+    color: #fff;
+  }
+  .btn-sun {
+    background: var(--color-sun);
+    color: var(--color-navy);
+  }
+  .btn-ghost {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+  .btn-danger {
+    background: var(--color-coral);
+    color: #fff;
+  }
+  .input {
+    width: 100%;
+    min-height: 3rem;
+    border-radius: 1rem;
+    padding: 0.5rem 1rem;
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 1.125rem;
+    border: 2px solid transparent;
+  }
+  .input:focus {
+    border-color: var(--ring);
+    outline: none;
+  }
+  .muted {
+    color: var(--muted);
+  }
+  .surface-2 {
+    background: var(--surface-2);
+  }
+}
+
+/* Floating background shapes. Gentle, slow and never flashing. */
+.bg-float {
+  animation: float 14s ease-in-out infinite;
+}
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-24px) rotate(8deg);
+  }
+}
+.pop-in {
+  animation: pop 0.35s ease-out both;
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+:root.reduce-motion *,
+:root.reduce-motion *::before,
+:root.reduce-motion *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
