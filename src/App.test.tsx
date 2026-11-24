@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
@@ -61,13 +61,16 @@ describe('first run', () => {
 });
 
 describe('arcade', () => {
-  it('shows the home screen for the active player with coming-soon games that cannot be launched', async () => {
+  it('shows the home screen: the platformer is playable, coming-soon games cannot be launched', async () => {
     await seed();
     renderAt('/');
     expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('Afa');
-    const card = screen.getAllByTestId('game-card-afa-terdoo')[0];
-    expect(card).toHaveTextContent(/coming soon/i);
-    expect(screen.queryByRole('button', { name: /^▶ play$/i })).toBeNull();
+    const afa = screen.getAllByTestId('game-card-afa-terdoo')[0];
+    expect(afa).not.toHaveTextContent(/coming soon/i);
+    expect(within(afa).getByRole('button', { name: /^▶ play$/i })).toBeInTheDocument();
+    const kart = screen.getAllByTestId('game-card-rainbow-kart')[0];
+    expect(kart).toHaveTextContent(/coming soon/i);
+    expect(within(kart).queryByRole('button', { name: /^▶ play$/i })).toBeNull();
   });
 
   it('lets a player favorite a game', async () => {

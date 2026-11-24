@@ -7,7 +7,7 @@ import type { AppSettings, ChildProfile, LockoutState, ParentAuthRecord, RetroGa
  * profiles, saves and imported games survive app updates.
  */
 export const DB_NAME = 'kids-adventure-arcade';
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;
 
 export interface KvMap {
   settings: AppSettings;
@@ -25,6 +25,8 @@ interface ArcadeDB extends DBSchema {
   romData: { key: string; value: { id: string; data: ArrayBuffer } };
   romArt: { key: string; value: { id: string; type: string; data: ArrayBuffer } };
   saves: { key: string; value: SaveState; indexes: { byRom: string; byRomProfile: [string, string] } };
+  /** Original games' progress, one record per game × player. */
+  progress: { key: string; value: { id: string; gameId: string; profileId: string; data: unknown; updatedAt: number }; indexes: { byProfile: string } };
 }
 
 let dbPromise: Promise<IDBPDatabase<ArcadeDB>> | null = null;
@@ -46,7 +48,11 @@ export function getDb(): Promise<IDBPDatabase<ArcadeDB>> {
           saves.createIndex('byRom', 'romId');
           saves.createIndex('byRomProfile', ['romId', 'profileId']);
         }
-        // Future versions: add `if (oldVersion < 3) { ... }` blocks here.
+        if (oldVersion < 3) {
+          const progress = db.createObjectStore('progress', { keyPath: 'id' });
+          progress.createIndex('byProfile', 'profileId');
+        }
+        // Future versions: add `if (oldVersion < 4) { ... }` blocks here.
       },
       blocking() {
         // A newer version of the app opened the DB in another tab; close so it can upgrade.

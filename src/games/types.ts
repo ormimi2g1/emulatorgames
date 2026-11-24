@@ -1,17 +1,29 @@
 import type { Difficulty } from '../data/types';
+import type { GameInput } from './shared/input';
 
 export type GameCategory = 'adventure' | 'retro' | 'racing' | 'puzzles' | 'learn';
 export type GameStatus = 'available' | 'coming-soon';
 export type ControlType = 'keyboard' | 'touch' | 'gamepad';
 
 /** What the arcade hands to a running game. */
+export interface GameResult {
+  stars?: number;
+  achievements?: string[];
+  [key: string]: unknown;
+}
+
 export interface GameContext {
   profileId: string;
   difficulty: Difficulty;
   reducedMotion: boolean;
   volume: { master: number; music: number; sfx: number; muted: boolean };
-  onComplete: (result: { stars?: number; achievements?: string[] }) => void;
-  onExitRequest: () => void;
+  input: GameInput;
+  /** Game-specific launch options (for example the chosen level and character). */
+  options: Record<string, unknown>;
+  onComplete: (result: GameResult) => void;
+  onPauseRequest: () => void;
+  /** Lets a game show a short friendly message in the host UI. */
+  onEvent?: (event: { type: string; [key: string]: unknown }) => void;
 }
 
 /**

@@ -19,9 +19,11 @@ export const GAMES: GameDefinition[] = [
     players: { min: 1, max: 1 },
     offline: true,
     saves: true,
-    status: 'coming-soon',
-    version: '0.0.0',
+    status: 'available',
+    version: '1.0.0',
     plannedPhase: 2,
+    // The game screen renders its own menus; this marks it as genuinely playable.
+    load: () => import('./afa-terdoo').then((m) => m.default),
   },
   {
     id: 'rainbow-kart',
