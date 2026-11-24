@@ -2,7 +2,11 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { hasParentPin } from '../auth/pin';
 import { getActiveProfileId, listProfiles, saveProfile, setActiveProfileId, toggleFavorite as toggleFav } from '../data/profiles';
 import { loadSettings, saveSettings } from '../data/settings';
-import { DEFAULT_SETTINGS, type AppSettings, type ChildProfile } from '../data/types';
+import { DEFAULT_SETTINGS, type AppSettings, type ChildProfile, type RetroGame } from '../data/types';
+import { listRetroGames, retroGamesFor } from '../retro/store';
+import { retroToGameDef } from '../retro/catalog';
+import { visibleGames } from '../games/catalog';
+import type { GameDefinition } from '../games/types';
 
 interface AppState {
   ready: boolean;
@@ -10,6 +14,8 @@ interface AppState {
   settings: AppSettings;
   profiles: ChildProfile[];
   activeProfile: ChildProfile | null;
+  retroGames: RetroGame[];
+  refreshRetro: () => Promise<void>;
   refresh: () => Promise<void>;
   selectProfile: (id: string | null) => Promise<void>;
   updateSettings: (patch: Partial<AppSettings>) => Promise<void>;
@@ -34,10 +40,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [profiles, setProfiles] = useState<ChildProfile[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [retroGames, setRetroGames] = useState<RetroGame[]>([]);
+
+  const refreshRetro = useCallback(async () => {
+    setRetroGames(await listRetroGames());
+  }, []);
 
   const refresh = useCallback(async () => {
-    const [pin, s, ps, a] = await Promise.all([hasParentPin(), loadSettings(), listProfiles(), getActiveProfileId()]);
+    const [pin, s, ps, a, rg] = await Promise.all([hasParentPin(), loadSettings(), listProfiles(), getActiveProfileId(), listRetroGames()]);
     setHasPin(pin);
+    setRetroGames(rg);
     setSettings(s);
     setProfiles(ps);
     setActiveId(a && ps.some((p) => p.id === a) ? a : null);
@@ -83,8 +95,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ ready, hasPin, settings, profiles, activeProfile, refresh, selectProfile, updateSettings, updateProfile, toggleFavorite }),
-    [ready, hasPin, settings, profiles, activeProfile, refresh, selectProfile, updateSettings, updateProfile, toggleFavorite],
+    () => ({ ready, hasPin, settings, profiles, activeProfile, retroGames, refreshRetro, refresh, selectProfile, updateSettings, updateProfile, toggleFavorite }),
+    [ready, hasPin, settings, profiles, activeProfile, retroGames, refreshRetro, refresh, selectProfile, updateSettings, updateProfile, toggleFavorite],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
@@ -93,4 +105,13 @@ export function useApp(): AppState {
   const v = useContext(Ctx);
   if (!v) throw new Error('useApp must be used inside AppProvider');
   return v;
+}
+
+/** Every game the active player may see: original games plus their retro games. */
+export function useArcadeGames(): GameDefinition[] {
+  const { activeProfile, settings, retroGames } = useApp();
+  return useMemo(
+    () => [...visibleGames(activeProfile, settings.disabledGames), ...retroGamesFor(activeProfile, retroGames).map(retroToGameDef)],
+    [activeProfile, settings.disabledGames, retroGames],
+  );
 }

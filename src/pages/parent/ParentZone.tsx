@@ -5,6 +5,7 @@ import { ParentGate } from './ParentGate';
 const TABS = [
   { to: '/parent', label: 'Dashboard', end: true },
   { to: '/parent/profiles', label: 'Players' },
+  { to: '/parent/retro', label: 'Retro Games' },
   { to: '/parent/games', label: 'Games' },
   { to: '/parent/settings', label: 'Settings' },
   { to: '/parent/data', label: 'Storage & Data' },

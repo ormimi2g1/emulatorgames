@@ -16,18 +16,19 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
 }
 
 export function Dashboard() {
-  const { profiles } = useApp();
+  const { profiles, retroGames } = useApp();
   const [storage, setStorage] = useState<StorageInfo | null>(null);
   useEffect(() => {
     void getStorageInfo().then(setStorage);
   }, []);
-  const playable = GAMES.filter(isPlayable).length;
+  const playable = GAMES.filter(isPlayable).length + retroGames.filter((g) => g.enabled && g.tested).length;
+  const total = GAMES.length + retroGames.length;
 
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat label="Players" value={String(profiles.length)} />
-        <Stat label="Games ready" value={`${playable} / ${GAMES.length}`} hint="Others are coming soon" />
+        <Stat label="Games ready" value={`${playable} / ${total}`} hint="Ready for kids" />
         <Stat label="Playing time" value="—" hint="Time tracking arrives with time limits" />
         <Stat label="Storage used" value={storage?.supported ? formatBytes(storage.usage) : 'n/a'} />
       </div>

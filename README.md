@@ -34,9 +34,15 @@ The first time the app opens, a grown-up creates a **parent PIN** (there is no d
 2. Register it in `src/games/catalog.ts` with `load: () => import('./your-game')` so it is lazy-loaded.
 3. Only set `status: 'available'` once it is genuinely playable. A unit test enforces that available games have code.
 
-## Retro games and legal notes
+## Retro games (NES)
 
-The arcade **does not include or download any commercial games, ROMs or BIOS files**. From Phase 3, a parent can import game files they lawfully own; files stay on the device and are never uploaded. Nintendo, Mario and other trademarks belong to their owners and are not used as this app's identity.
+1. Parent Zone → **Retro Games** → choose the system (NES) and a `.nes` file you own.
+2. Check the title, ages, difficulty, picture and which players can see it, then **Add game**.
+3. Tap **Test**. Once the game starts, switch on **Kids can play**.
+
+Keyboard: arrows, Z = A, X = B, Enter = Start, V = Select. Phones and tablets get on-screen buttons. Controllers work through the browser's Gamepad API; buttons and player 2 can be changed in the console's own menu.
+
+The arcade **does not include or download any commercial games, ROMs or BIOS files**. Game files stay on the device and are never uploaded. Nintendo, Mario and other trademarks belong to their owners and are not used as this app's identity.
 
 ## Replit
 

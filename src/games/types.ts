@@ -49,6 +49,8 @@ export interface GameDefinition {
   version: string;
   /** Phase on the roadmap in which this game is scheduled to arrive. */
   plannedPhase?: number;
-  /** Lazily loaded game code. Required when status is 'available'. */
+  /** Lazily loaded game code. Required for original games when status is 'available'. */
   load?: () => Promise<GameModule>;
+  /** Set for parent-imported retro games; they run in the Retro Console instead of `load`. */
+  retroId?: string;
 }

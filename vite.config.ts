@@ -29,8 +29,18 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // The retro console (EmulatorJS + cores, ~3.5 MB) is cached on first use instead of on install.
+        globIgnores: ['emulatorjs/**'],
         navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/emulatorjs\//],
         cleanupOutdatedCaches: true,
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.origin === self.location.origin && url.pathname.startsWith('/emulatorjs/'),
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'retro-console', expiration: { maxEntries: 60 } },
+          },
+        ],
       },
     }),
   ],

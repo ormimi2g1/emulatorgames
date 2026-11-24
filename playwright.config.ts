@@ -7,7 +7,7 @@ export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 30_000,
   retries: 0,
-  use: { baseURL: 'http://localhost:4173', trace: 'off', launchOptions },
+  use: { baseURL: 'http://localhost:4173', trace: 'off', screenshot: 'only-on-failure', launchOptions },
   webServer: {
     command: 'npx vite preview --port 4173 --strictPort',
     url: 'http://localhost:4173',
