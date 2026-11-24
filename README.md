@@ -22,7 +22,7 @@ The first time the app opens, a grown-up creates a **parent PIN** (there is no d
 |---|---|
 | `src/data/` | Local data layer (IndexedDB via `idb`): profiles, settings, export, avatars, achievements |
 | `src/auth/` | Parent PIN (PBKDF2 hash, lockout, recovery) and Parent Zone session |
-| `src/games/` | Game registry (`catalog.ts`), lifecycle types (`types.ts`), original thumbnails |
+| `src/games/` | Game registry (`catalog.ts`), lifecycle types (`types.ts`), original thumbnails, shared game host/input, and the Afa & Terdoo platformer |
 | `src/pages/` | Screens: setup, player picker, home, categories, My Games, trophies, Parent Zone |
 | `src/components/` | Shared UI: layout and navigation, game cards, PIN pad, dialogs |
 | `tests/e2e/` | Playwright browser tests |
@@ -33,6 +33,12 @@ The first time the app opens, a grown-up creates a **parent PIN** (there is no d
 1. Implement a `GameModule` (see `src/games/types.ts`): `mount()` returns an instance with `start / pause / resume / restart / save / load / destroy`. `destroy` must stop loops, audio and listeners.
 2. Register it in `src/games/catalog.ts` with `load: () => import('./your-game')` so it is lazy-loaded.
 3. Only set `status: 'available'` once it is genuinely playable. A unit test enforces that available games have code.
+
+## Afa & Terdoo: The Lost Rainbow Kingdom
+
+An original platformer with three worlds (Sunshine Meadows, Magical Forest, Crystal Caverns). Pick Afa (high jump, double jump, rainbow shield) or Terdoo (fast, small enough for tiny tunnels, turbo dash). Collect stars, find the rainbow crystal and the secret place in every world, and cheer up the Gloomy Cloud at the end.
+
+Keys: arrows or A/D to move, Space/Z/up to jump, X or Shift for the special move, Esc or P to pause. Phones and tablets get big on-screen buttons; controllers work too. The difficulty set for each player (Little Explorer, Adventurer, Super Hero) changes hearts, enemy speed and double jumping.
 
 ## Retro games (NES)
 

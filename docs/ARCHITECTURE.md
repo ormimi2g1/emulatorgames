@@ -16,6 +16,7 @@
 | Child profiles | IndexedDB `profiles` | Nickname, avatar, optional age range, difficulty, favorites, assigned games, accessibility, trophies. No real names, emails, birthdays, photos or locations. |
 | Active player | IndexedDB `kv.activeProfileId` | |
 | Imported retro games | IndexedDB `romMeta` (details), `romData` (file bytes), `romArt` (picture) | Never uploaded. SHA-256 used to spot duplicates. |
+| Original game progress | IndexedDB `progress`, one record per game × player | Afa & Terdoo: best stars per world, crystals, secrets, heroes used, last checkpoint. Deleted with the player. |
 | Retro save states | IndexedDB `saves`, one per game × player × slot (0 = auto, 1–3 manual) | Deleted with the game or the player. |
 | Server-side data | none | |
 
@@ -44,3 +45,10 @@ Schema changes are additive migrations in `src/data/db.ts` (`upgrade(oldVersion)
 - Auto-save every 60 s, when the app goes to the background (it also pauses), and on exit. Next launch continues from the auto-save.
 - The service worker caches the console on first use (`retro-console` cache), so a game that has been played once also works offline.
 - Only NES is supported. SNES, Game Boy (Color/Advance) and Genesis are listed as "coming later" until their cores are added and tested.
+
+## Original games (Afa & Terdoo)
+
+- `src/games/shared/`: `GameInput` merges keyboard, Gamepad API and on-screen touch buttons into one per-frame state; `GameHost` lazy-loads a `GameModule`, owns the pause menu, full screen and touch controls, pauses when the app goes to the background, and destroys the game on exit.
+- `src/games/afa-terdoo/`: menus in React (`AfaTerdooScreen`), the level in Phaser (`LevelScene`, loaded only when a level starts, about 330 KB gzipped, precached for offline play). Levels are text grids in `levels.ts`; scoring, unlocks and badges are plain functions in `rules.ts` with unit tests. Art is drawn in code (`art.ts`), sounds are synthesized (`sfx.ts`).
+- No game over: losing every heart says "Great try!" and returns the player to the last checkpoint. Bouncing on critters cheers them up rather than defeating them.
+- `?testhooks=1` exposes `window.__afa` (state and teleport) for the browser tests only; it changes nothing else.

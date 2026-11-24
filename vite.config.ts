@@ -44,6 +44,8 @@ export default defineConfig({
       },
     }),
   ],
+  // Phaser (lazy-loaded with the platformer) is one ~1.2 MB chunk; it is precached for offline play.
+  build: { chunkSizeWarningLimit: 1400 },
   server: { port: 5000, host: '0.0.0.0', allowedHosts: true },
   preview: { port: 5000, host: '0.0.0.0', allowedHosts: true },
   test: {
