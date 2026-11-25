@@ -3,6 +3,7 @@ import { GameCard, GameRow } from '../components/GameCard';
 import { ACHIEVEMENTS } from '../data/achievements';
 import { CATEGORIES } from '../games/catalog';
 import type { GameDefinition } from '../games/types';
+import { PlaytimeBadge } from '../playtime/PlaytimeBadge';
 import { useApp, useArcadeGames } from '../state/AppContext';
 
 const FEATURED_IDS = ['afa-terdoo', 'rainbow-kart'];
@@ -31,6 +32,7 @@ export function Home() {
           {greeting()}, <span className="text-purple dark:text-sun">{activeProfile?.nickname}</span>! 👋
         </h1>
         <p className="muted text-lg">Big Adventures for Little Heroes</p>
+        {activeProfile && <PlaytimeBadge profile={activeProfile} />}
       </section>
 
       {featured.length > 0 && (

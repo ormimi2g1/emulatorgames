@@ -3,6 +3,7 @@ import { DEFAULT_ACCESSIBILITY, type ChildProfile } from './types';
 import { newId } from '../utils/id';
 import { deleteSavesForProfile } from '../retro/store';
 import { deleteProgressForProfile } from './progress';
+import { deletePlaytimeForProfile } from '../playtime/store';
 
 export const MAX_PROFILES = 8;
 export const NICKNAME_MAX = 16;
@@ -55,6 +56,7 @@ export async function deleteProfile(id: string): Promise<void> {
   await (await getDb()).delete('profiles', id);
   await deleteSavesForProfile(id);
   await deleteProgressForProfile(id);
+  await deletePlaytimeForProfile(id);
   if ((await kvGet('activeProfileId')) === id) await kvDelete('activeProfileId');
 }
 

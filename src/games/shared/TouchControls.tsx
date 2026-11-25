@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { GameButton, GameInput } from './input';
+import { getControls, type GameButton, type GameInput } from './input';
 
 function Pad({ input, button, label, icon, size }: { input: GameInput; button: GameButton; label: string; icon: string; size: number }) {
   const ref = useRef<HTMLButtonElement>(null);
@@ -12,7 +12,7 @@ function Pad({ input, button, label, icon, size }: { input: GameInput; button: G
       active.add(e.pointerId);
       input.setTouch(button, true);
       el.dataset.down = '1';
-      navigator.vibrate?.(8);
+      if (getControls().vibration) navigator.vibrate?.(8);
     };
     const up = (e: PointerEvent) => {
       active.delete(e.pointerId);
@@ -58,7 +58,7 @@ export function TouchControls({ input, large, leftHanded, actionLabel = 'Special
   );
   if (steeringOnly) {
     return (
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between p-4 pb-[max(1rem,env(safe-area-inset-bottom))] opacity-90" data-testid="touch-controls">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between p-4 pb-[max(1rem,env(safe-area-inset-bottom))]" style={{ opacity: getControls().touchOpacity }} data-testid="touch-controls">
         <Pad input={input} button="left" label="Steer left" icon="◀" size={Math.round(size * 1.15)} />
         <Pad input={input} button="right" label="Steer right" icon="▶" size={Math.round(size * 1.15)} />
       </div>
@@ -71,7 +71,7 @@ export function TouchControls({ input, large, leftHanded, actionLabel = 'Special
     </div>
   );
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between p-4 pb-[max(1rem,env(safe-area-inset-bottom))] opacity-90" data-testid="touch-controls">
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between p-4 pb-[max(1rem,env(safe-area-inset-bottom))]" style={{ opacity: getControls().touchOpacity }} data-testid="touch-controls">
       {leftHanded ? act : move}
       {leftHanded ? move : act}
     </div>

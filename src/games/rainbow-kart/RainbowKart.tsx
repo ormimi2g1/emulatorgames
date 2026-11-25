@@ -1,3 +1,4 @@
+import { playState } from '../../playtime/playState';
 import { useEffect, useRef, useState } from 'react';
 import { GameInput } from '../shared/input';
 import { MiniGameFrame, ResultCard, useMiniGame } from '../shared/MiniGame';
@@ -147,7 +148,9 @@ function RaceView({ g, onAgain }: { g: ReturnType<typeof useMiniGame>; onAgain: 
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       gi.update();
-      if (countdown > 0) {
+      if (playState.isHeld()) {
+        // Break or time's up: freeze the race.
+      } else if (countdown > 0) {
         const before = Math.ceil(countdown);
         countdown -= dt;
         if (Math.ceil(countdown) !== before) g.play(countdown > 0 ? 'tap' : 'boost');

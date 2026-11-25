@@ -13,6 +13,8 @@ async function setup(page: Page) {
   await page.getByRole('checkbox', { name: /wrote it down/i }).check();
   await page.getByRole('button', { name: /^next$/i }).click();
   await page.getByRole('button', { name: /afa & terdoo/i }).click();
+  // Wait for the player picker, so the next click can't hit the "Afa & Terdoo" button again.
+  await expect(page.getByRole('heading', { level: 1, name: "Who's playing?" })).toBeVisible();
   await page.getByRole('button', { name: /afa/i }).first().click();
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Afa');
 }

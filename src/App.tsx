@@ -9,9 +9,11 @@ import { MyGames } from './pages/MyGames';
 import { ProfilePicker } from './pages/ProfilePicker';
 import { Welcome } from './pages/Welcome';
 import { Dashboard } from './pages/parent/Dashboard';
+import { Controllers } from './pages/parent/Controllers';
 import { Data } from './pages/parent/Data';
 import { Games } from './pages/parent/Games';
 import { ParentZone } from './pages/parent/ParentZone';
+import { Playtime } from './pages/parent/Playtime';
 import { Profiles } from './pages/parent/Profiles';
 import { RetroGames } from './pages/parent/RetroGames';
 import { Play } from './pages/Play';
@@ -60,6 +62,8 @@ export function AppRoutes() {
             <Route path="profiles" element={<Profiles />} />
             <Route path="games" element={<Games />} />
             <Route path="retro" element={<RetroGames />} />
+            <Route path="playtime" element={<Playtime />} />
+            <Route path="controllers" element={<Controllers />} />
             <Route path="settings" element={<Settings />} />
             <Route path="data" element={<Data />} />
             <Route path="security" element={<Security />} />

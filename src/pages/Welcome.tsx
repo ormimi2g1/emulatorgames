@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useParentAuth } from '../auth/ParentAuthContext';
 import { createParentPin, validatePinFormat } from '../auth/pin';
 import { Background } from '../components/Background';
@@ -18,6 +18,8 @@ export function Welcome() {
   const [error, setError] = useState<string | null>(null);
   const [recovery, setRecovery] = useState('');
   const [saved, setSaved] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const addingRef = useRef(false);
 
   // Once refresh() sees the new PIN, the /welcome route redirects into the arcade
   // (home if a player is selected, otherwise the player picker). One redirect path only.
@@ -92,7 +94,12 @@ export function Welcome() {
             <h2 className="text-2xl font-bold">Who's playing?</h2>
             <button
               className="btn btn-sun"
+              disabled={adding}
               onClick={async () => {
+                // A double tap must not add the players twice.
+                if (addingRef.current) return;
+                addingRef.current = true;
+                setAdding(true);
                 for (const p of demoProfiles()) await saveProfile(p);
                 await finish();
               }}

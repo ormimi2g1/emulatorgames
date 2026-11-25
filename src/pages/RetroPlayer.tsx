@@ -2,13 +2,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useParentAuth } from '../auth/ParentAuthContext';
 import { Dialog } from '../components/Dialog';
+import { playState } from '../playtime/playState';
 import { AUTO_SLOT, SAVE_SLOTS, type RetroGame, type SaveState } from '../data/types';
-import { EmulatorBridge, PLAYER_URL, type EmulatorEvent } from '../retro/emulatorBridge';
+import { EmulatorBridge, playerFrameUrl, type EmulatorEvent } from '../retro/emulatorBridge';
 import { getRomBytes, listSaves, markTested, readSave, retroGamesFor, writeSave } from '../retro/store';
 import { useApp } from '../state/AppContext';
 import { ParentGate } from './parent/ParentGate';
 
 const AUTOSAVE_MS = 60_000;
+/** The console page must say hello within this time (the game itself may take longer to load). */
+const LOAD_TIMEOUT_MS = 30_000;
 
 type Status = 'loading' | 'playing' | 'paused' | 'error';
 
@@ -125,6 +128,29 @@ function Console({ game, owner, testMode, volume, muted: mutedSetting, onStarted
     }
   }, [game.id, owner]);
 
+  // Open the console page (see playerFrameUrl), and give up kindly if it never answers.
+  const [frameSrc, setFrameSrc] = useState<string | null>(null);
+  const readyRef = useRef(false);
+  useEffect(() => {
+    let revoke = () => undefined as void;
+    let alive = true;
+    void playerFrameUrl().then((r) => {
+      if (!alive) return r.revoke();
+      revoke = r.revoke;
+      setFrameSrc(r.url);
+    });
+    const t = window.setTimeout(() => {
+      if (readyRef.current || statusRef.current !== 'loading') return;
+      setStatus('error');
+      setError("The retro console didn't open. Check the internet connection and try again.");
+    }, LOAD_TIMEOUT_MS);
+    return () => {
+      alive = false;
+      window.clearTimeout(t);
+      revoke();
+    };
+  }, []);
+
   // Boot the emulator and wire up events.
   useEffect(() => {
     const frame = frameRef.current!;
@@ -132,6 +158,7 @@ function Console({ game, owner, testMode, volume, muted: mutedSetting, onStarted
     const onEvent = async (e: EmulatorEvent) => {
       if (disposed) return;
       if (e.type === 'ready') {
+        readyRef.current = true;
         const [rom, auto] = await Promise.all([getRomBytes(game.id), readSave(game.id, owner, AUTO_SLOT)]);
         if (!rom) {
           setStatus('error');
@@ -179,7 +206,21 @@ function Console({ game, owner, testMode, volume, muted: mutedSetting, onStarted
     };
   }, [autosave]);
 
+  // Time isn't counted while paused. Break or time's up: pause and save.
+  useEffect(() => playState.setPaused(status !== 'playing' || dialog !== null), [status, dialog]);
+  useEffect(
+    () =>
+      playState.onHeld((held) => {
+        if (!held || statusRef.current !== 'playing') return;
+        bridgeRef.current?.send({ type: 'pause' });
+        setStatus('paused');
+        void autosave();
+      }),
+    [autosave],
+  );
+
   const pauseToggle = () => {
+    if (playState.isHeld()) return;
     if (status === 'playing') {
       bridgeRef.current?.send({ type: 'pause' });
       setStatus('paused');
@@ -200,7 +241,7 @@ function Console({ game, owner, testMode, volume, muted: mutedSetting, onStarted
   };
   const closeDialog = () => {
     setDialog(null);
-    if (statusRef.current === 'paused') {
+    if (statusRef.current === 'paused' && !playState.isHeld()) {
       bridgeRef.current?.send({ type: 'resume' });
       setStatus('playing');
     }
@@ -263,7 +304,7 @@ function Console({ game, owner, testMode, volume, muted: mutedSetting, onStarted
       <div className="relative flex-1">
         <iframe
           ref={frameRef}
-          src={PLAYER_URL}
+          src={frameSrc ?? undefined}
           title={`${game.title} game screen`}
           allow="fullscreen; gamepad; autoplay"
           className="absolute inset-0 h-full w-full border-0"

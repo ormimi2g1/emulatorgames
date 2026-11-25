@@ -31,7 +31,38 @@ export interface ChildProfile {
   achievements: string[];
   createdAt: number;
   isDemo?: boolean;
+  /** Screen-time rules. Missing = unlimited (older profiles). */
+  playtime?: PlaytimeRules;
+  /** Parent pressed "Pause play now": no games until switched off. */
+  playPaused?: boolean;
 }
+
+/** Per-player screen-time rules, set in the Parent Zone. */
+export interface PlaytimeRules {
+  /** false = unlimited mode (time is still counted for the dashboard). */
+  enabled: boolean;
+  weekdayMinutes: number;
+  weekendMinutes: number;
+  /** Permitted playing hours, "HH:MM" local time. Equal values = any time. */
+  startTime: string;
+  endTime: string;
+  /** Break reminder after this many minutes of play. 0 = off. */
+  breakEveryMinutes: number;
+  breakMinutes: number;
+  /** Daily cap for single games, in minutes. Missing or 0 = no extra cap. */
+  gameMinutes: Record<string, number>;
+}
+
+export const DEFAULT_PLAYTIME: PlaytimeRules = {
+  enabled: false,
+  weekdayMinutes: 60,
+  weekendMinutes: 90,
+  startTime: '07:00',
+  endTime: '20:00',
+  breakEveryMinutes: 30,
+  breakMinutes: 5,
+  gameMinutes: {},
+};
 
 export interface AppSettings {
   theme: ThemeMode;
@@ -41,7 +72,25 @@ export interface AppSettings {
   musicVolume: number;
   sfxVolume: number;
   muted: boolean;
+  /** Button mapping for the original games. */
+  controls: ControlSettings;
 }
+
+/** Keyboard codes (KeyboardEvent.code) and gamepad button indexes for the original games. */
+export interface ControlSettings {
+  keys: { jump: string; action: string; pause: string };
+  pad: { jump: number; action: number; pause: number };
+  /** On-screen button see-through level, 0.3 to 1. */
+  touchOpacity: number;
+  vibration: boolean;
+}
+
+export const DEFAULT_CONTROLS: ControlSettings = {
+  keys: { jump: 'Space', action: 'KeyX', pause: 'Escape' },
+  pad: { jump: 0, action: 1, pause: 9 },
+  touchOpacity: 0.9,
+  vibration: true,
+};
 
 export interface ParentAuthRecord {
   version: 1;
@@ -74,6 +123,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   musicVolume: 0.6,
   sfxVolume: 0.8,
   muted: false,
+  controls: DEFAULT_CONTROLS,
 };
 
 export interface RetroGame {

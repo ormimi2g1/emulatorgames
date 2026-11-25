@@ -5,6 +5,7 @@ import type { ChildProfile, Difficulty, RetroGame, SaveState } from '../../data/
 import { retroGameId } from '../../retro/catalog';
 import { RetroThumbnail } from '../../retro/RetroThumbnail';
 import { deleteRetroGame, deleteSave, importRetroGame, listSaves, retroStorageBytes, setRetroArt, updateRetroGame } from '../../retro/store';
+import { gameFromZip, isZip } from '../../retro/unzip';
 import { getSystem, RETRO_SYSTEMS, titleFromFileName, validateRomFile, validateTitle } from '../../retro/systems';
 import { useApp } from '../../state/AppContext';
 import { formatBytes } from '../../utils/storage';
@@ -91,11 +92,20 @@ function ImportPanel({ onImported }: { onImported: (g: RetroGame) => void }) {
     setError(null);
     setFile(null);
     if (!f) return;
-    const bytes = await readFile(f);
-    const err = validateRomFile(system, f.name, bytes);
+    let name = f.name;
+    let bytes = await readFile(f);
+    // A zipped game: take the game file out (on this device; nothing is uploaded).
+    if (name.toLowerCase().endsWith('.zip') || isZip(bytes)) {
+      try {
+        ({ name, bytes } = await gameFromZip(bytes, sys.extensions));
+      } catch (e) {
+        return setError((e as Error).message);
+      }
+    }
+    const err = validateRomFile(system, name, bytes);
     if (err) return setError(err);
-    setFile({ name: f.name, bytes });
-    setDetails((d) => ({ ...d, title: titleFromFileName(f.name) }));
+    setFile({ name, bytes });
+    setDetails((d) => ({ ...d, title: titleFromFileName(name) }));
   };
 
   const submit = async () => {
@@ -135,8 +145,8 @@ function ImportPanel({ onImported }: { onImported: (g: RetroGame) => void }) {
         </select>
       </label>
       <label className="flex flex-col gap-1 font-semibold">
-        2. Game file ({sys.extensions.join(', ')})
-        <input key={`rom-${inputKey}`} type="file" accept={sys.extensions.join(',')} className="input" onChange={(e) => void pick(e.target.files?.[0])} data-testid="rom-input" />
+        2. Game file ({sys.extensions.join(', ')}, or a .zip with one inside)
+        <input key={`rom-${inputKey}`} type="file" accept={[...sys.extensions, '.zip'].join(',')} className="input" onChange={(e) => void pick(e.target.files?.[0])} data-testid="rom-input" />
       </label>
       {file && (
         <>
