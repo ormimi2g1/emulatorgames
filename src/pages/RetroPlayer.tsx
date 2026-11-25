@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useParentAuth } from '../auth/ParentAuthContext';
 import { Dialog } from '../components/Dialog';
+import { playState } from '../playtime/playState';
 import { AUTO_SLOT, SAVE_SLOTS, type RetroGame, type SaveState } from '../data/types';
 import { EmulatorBridge, PLAYER_URL, type EmulatorEvent } from '../retro/emulatorBridge';
 import { getRomBytes, listSaves, markTested, readSave, retroGamesFor, writeSave } from '../retro/store';
@@ -179,7 +180,21 @@ function Console({ game, owner, testMode, volume, muted: mutedSetting, onStarted
     };
   }, [autosave]);
 
+  // Time isn't counted while paused. Break or time's up: pause and save.
+  useEffect(() => playState.setPaused(status !== 'playing' || dialog !== null), [status, dialog]);
+  useEffect(
+    () =>
+      playState.onHeld((held) => {
+        if (!held || statusRef.current !== 'playing') return;
+        bridgeRef.current?.send({ type: 'pause' });
+        setStatus('paused');
+        void autosave();
+      }),
+    [autosave],
+  );
+
   const pauseToggle = () => {
+    if (playState.isHeld()) return;
     if (status === 'playing') {
       bridgeRef.current?.send({ type: 'pause' });
       setStatus('paused');
@@ -200,7 +215,7 @@ function Console({ game, owner, testMode, volume, muted: mutedSetting, onStarted
   };
   const closeDialog = () => {
     setDialog(null);
-    if (statusRef.current === 'paused') {
+    if (statusRef.current === 'paused' && !playState.isHeld()) {
       bridgeRef.current?.send({ type: 'resume' });
       setStatus('playing');
     }

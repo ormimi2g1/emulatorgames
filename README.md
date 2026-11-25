@@ -54,6 +54,9 @@ Keyboard: arrows, Z = A, X = B, Enter = Start, V = Select; on SNES also A key = 
 
 The arcade **does not include or download any commercial games, ROMs or BIOS files**. Game files stay on the device and are never uploaded. Nintendo, Mario and other trademarks belong to their owners and are not used as this app's identity.
 
+## Family features (Phase 5)
+Parent Zone → **Playtime**: unlimited mode or daily limits (school days and weekends), permitted hours, break reminders, limits for single games, "Pause play now", and extra time with the PIN. **Dashboard**: time today, this week and in total, most played and recently played games, and learning progress. **Controllers**: live controller test and button mapping, plus touch button settings.
+
 ## Replit
 
 GitHub is the source of truth. Replit imports this repo and only mirrors it (`.replit` runs the dev server on port 5000 and defines a static deployment). Nothing is published without the owner's approval.

@@ -17,6 +17,9 @@
 | Active player | IndexedDB `kv.activeProfileId` | |
 | Imported retro games | IndexedDB `romMeta` (details), `romData` (file bytes), `romArt` (picture) | Never uploaded. SHA-256 used to spot duplicates. |
 | Original game progress | IndexedDB `progress`, one record per game × player | Afa & Terdoo: best stars per world, crystals, secrets, heroes used, last checkpoint. Deleted with the player. |
+| Playing time | IndexedDB `playtime` (added in DB version 4), one record per player per local day | Seconds played, seconds per game, grown-up extensions, break state. Deleted with the player; included in the parent's data export. |
+| Playtime rules | On each player (`playtime`, `playPaused`) | Unlimited by default. |
+| Control mapping | Settings (`controls`) | Keyboard keys and gamepad buttons for jump, special and pause; touch button opacity; vibration. |
 | Retro save states | IndexedDB `saves`, one per game × player × slot (0 = auto, 1–3 manual) | Deleted with the game or the player. |
 | Server-side data | none | |
 
@@ -30,7 +33,7 @@ Schema changes are additive migrations in `src/data/db.ts` (`upgrade(oldVersion)
 - Forgot PIN: one-time recovery code shown at setup (rotated after each use or PIN change).
 - Export never includes PIN or recovery hashes.
 
-**Limitations:** this keeps children out of settings on a shared device. It cannot stop an adult who clears site data or uses developer tools, and nothing syncs between devices. Time limits (Phase 5) will have the same local-only limitation.
+**Limitations:** this keeps children out of settings on a shared device. It cannot stop an adult who clears site data or uses developer tools, and nothing syncs between devices. Time limits have the same local-only limitation (see Playtime below).
 
 ## PWA
 
@@ -56,3 +59,13 @@ Schema changes are additive migrations in `src/data/db.ts` (`upgrade(oldVersion)
 ## Mini-games
 
 Memory Magic, Math Quest and Word Adventure are plain React (big buttons, screen-reader friendly). Space Explorer and Rainbow Kart draw on a `<canvas>` with a small engine class each (`engine.ts`) that has no drawing code, so it is unit tested. All of them share `src/games/shared/MiniGame.tsx` (frame, results, best scores in the `progress` store, badges) and `tones.ts` (synthesized sounds). Rounds can be replayed with `?seed=N`, which the browser tests use.
+
+## Playtime (Phase 5)
+
+`src/playtime/rules.ts` holds the rules as plain functions (daily allowance by weekday or weekend, permitted hours that may cross midnight, per-game caps, breaks, grown-up extensions). It is unit tested with fixed dates. `PlaytimeGuard` wraps every game screen in `Play.tsx` (not parent test launches). Once a second it counts one second only when the page is visible, the game isn't paused and play is allowed, and saves every 5 seconds and when the page is hidden. When a break or stop starts, it turns on `playState.held`. GameHost (Afa & Terdoo) and the Retro Console then pause, and the console also autosaves. Space Explorer and Rainbow Kart freeze, and the turn-based games are covered by the message. Resuming is blocked while held. Only the parent PIN (checked with the same lockout as the Parent Zone) can add 10, 15 or 30 minutes. That also lifts the hours window for that long.
+
+**Limitations:** counting and enforcement are local to this browser. Clearing site data resets them, other devices keep their own counts, and changing the device clock changes the day and the hours. Two open tabs each count their own game.
+
+## Controls
+
+`setControls()` in `src/games/shared/input.ts` applies the parent's mapping to every `GameInput`. Arrow keys and WASD always move, and Escape always pauses. The Controllers page in the Parent Zone polls `navigator.getGamepads()` for a live button test and to capture a new button. Retro games keep EmulatorJS's own layout.

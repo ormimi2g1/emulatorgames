@@ -1,3 +1,4 @@
+import { playState } from '../../playtime/playState';
 import { useEffect, useRef, useState } from 'react';
 import { GameInput } from '../shared/input';
 import { MiniGameFrame, ResultCard, seededRandom, useMiniGame } from '../shared/MiniGame';
@@ -134,7 +135,7 @@ function Flight({ g, onAgain }: { g: ReturnType<typeof useMiniGame>; onAgain: ()
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       input.update();
-      if (!pausedRef.current) {
+      if (!pausedRef.current && !playState.isHeld()) {
         const dir = (input.isDown('down') ? 1 : 0) - (input.isDown('up') || input.isDown('jump') ? 1 : 0);
         for (const e of game.step(dt, dir, targetRef.current)) {
           if (e.type === 'star') g.play('star');

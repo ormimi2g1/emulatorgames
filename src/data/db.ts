@@ -1,4 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
+import type { DayUsage } from '../playtime/rules';
 import type { AppSettings, ChildProfile, LockoutState, ParentAuthRecord, RetroGame, SaveState } from './types';
 
 /**
@@ -7,7 +8,7 @@ import type { AppSettings, ChildProfile, LockoutState, ParentAuthRecord, RetroGa
  * profiles, saves and imported games survive app updates.
  */
 export const DB_NAME = 'kids-adventure-arcade';
-export const DB_VERSION = 3;
+export const DB_VERSION = 4;
 
 export interface KvMap {
   settings: AppSettings;
@@ -27,6 +28,8 @@ interface ArcadeDB extends DBSchema {
   saves: { key: string; value: SaveState; indexes: { byRom: string; byRomProfile: [string, string] } };
   /** Original games' progress, one record per game × player. */
   progress: { key: string; value: { id: string; gameId: string; profileId: string; data: unknown; updatedAt: number }; indexes: { byProfile: string } };
+  /** Active playing time, one record per player per local day. */
+  playtime: { key: string; value: DayUsage; indexes: { byProfile: string } };
 }
 
 let dbPromise: Promise<IDBPDatabase<ArcadeDB>> | null = null;
@@ -52,7 +55,11 @@ export function getDb(): Promise<IDBPDatabase<ArcadeDB>> {
           const progress = db.createObjectStore('progress', { keyPath: 'id' });
           progress.createIndex('byProfile', 'profileId');
         }
-        // Future versions: add `if (oldVersion < 4) { ... }` blocks here.
+        if (oldVersion < 4) {
+          const playtime = db.createObjectStore('playtime', { keyPath: 'id' });
+          playtime.createIndex('byProfile', 'profileId');
+        }
+        // Future versions: add `if (oldVersion < 5) { ... }` blocks here.
       },
       blocking() {
         // A newer version of the app opened the DB in another tab; close so it can upgrade.

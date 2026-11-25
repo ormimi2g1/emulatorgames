@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ChildProfile, AppSettings } from '../../data/types';
 import type { GameContext, GameInstance, GameModule, GameResult } from '../types';
+import { playState } from '../../playtime/playState';
 import { GameInput } from './input';
 import { TouchControls, isTouchDevice } from './TouchControls';
 
@@ -47,6 +48,8 @@ export function GameHost(props: GameHostProps) {
     setStatus('paused');
   }, []);
   const resume = useCallback(() => {
+    // Break or time's up: the playtime screen decides when play goes on.
+    if (playState.isHeld()) return;
     instRef.current?.resume();
     setStatus('playing');
     mountRef.current?.focus();
@@ -100,6 +103,10 @@ export function GameHost(props: GameHostProps) {
     // Mount once per game session; options are fixed for its lifetime.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Time isn't counted while paused; the playtime guard can pause us.
+  useEffect(() => playState.setPaused(status !== 'playing'), [status]);
+  useEffect(() => playState.onHeld((held) => held && pause()), [pause]);
 
   useEffect(() => {
     const onVis = () => document.hidden && pause();

@@ -6,6 +6,7 @@ import { DEFAULT_SETTINGS, type AppSettings, type ChildProfile, type RetroGame }
 import { listRetroGames, retroGamesFor } from '../retro/store';
 import { retroToGameDef } from '../retro/catalog';
 import { visibleGames } from '../games/catalog';
+import { setControls } from '../games/shared/input';
 import type { GameDefinition } from '../games/types';
 
 interface AppState {
@@ -61,6 +62,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   const activeProfile = useMemo(() => profiles.find((p) => p.id === activeId) ?? null, [profiles, activeId]);
+
+  useEffect(() => setControls(settings.controls), [settings.controls]);
 
   useEffect(() => {
     applyTheme(settings, activeProfile);

@@ -2,9 +2,12 @@
  * Shared game input: keyboard, gamepads (Gamepad API) and on-screen touch buttons
  * all feed one state that games read every frame.
  */
+import { DEFAULT_CONTROLS, type ControlSettings } from '../../data/types';
+
 export type GameButton = 'left' | 'right' | 'up' | 'down' | 'jump' | 'action' | 'pause';
 
-const KEYMAP: Record<string, GameButton> = {
+/** Fixed keys. The parent's chosen jump, action and pause keys are added on top. */
+const BASE_KEYS: Record<string, GameButton> = {
   ArrowLeft: 'left',
   KeyA: 'left',
   ArrowRight: 'right',
@@ -21,6 +24,42 @@ const KEYMAP: Record<string, GameButton> = {
   Enter: 'pause',
   KeyP: 'pause',
 };
+
+let controls: ControlSettings = DEFAULT_CONTROLS;
+let keymap: Record<string, GameButton> = buildKeymap(DEFAULT_CONTROLS);
+
+function buildKeymap(c: ControlSettings): Record<string, GameButton> {
+  // Escape always pauses, so a child can always stop.
+  return { ...BASE_KEYS, [c.keys.jump]: 'jump', [c.keys.action]: 'action', [c.keys.pause]: 'pause', Escape: 'pause' };
+}
+
+/** Apply the Parent Zone's control settings to every game. */
+export function setControls(c: ControlSettings) {
+  controls = c;
+  keymap = buildKeymap(c);
+}
+
+export function getControls(): ControlSettings {
+  return controls;
+}
+
+/** Which game button a gamepad button index triggers. */
+export function padButton(index: number, c: ControlSettings = controls): GameButton | null {
+  if (index === c.pad.jump) return 'jump';
+  if (index === c.pad.action) return 'action';
+  if (index === c.pad.pause) return 'pause';
+  if (index === 12) return 'up';
+  if (index === 13) return 'down';
+  if (index === 14) return 'left';
+  if (index === 15) return 'right';
+  // Spare face buttons also do the special move.
+  if (index >= 0 && index <= 3) return 'action';
+  return null;
+}
+
+export function keyButton(code: string): GameButton | undefined {
+  return keymap[code];
+}
 
 export type PadStatus = 'connected' | 'disconnected';
 
@@ -46,7 +85,7 @@ export class GameInput {
   }
 
   private onKeyDown = (e: KeyboardEvent) => {
-    const b = KEYMAP[e.code];
+    const b = keymap[e.code];
     if (!b || !this.enabled) return;
     // Keep game keys from scrolling the page while playing.
     e.preventDefault();
@@ -54,7 +93,7 @@ export class GameInput {
     this.tapped.add(b);
   };
   private onKeyUp = (e: KeyboardEvent) => {
-    const b = KEYMAP[e.code];
+    const b = keymap[e.code];
     if (b) this.keys.delete(b);
   };
   private clearAll = () => {
@@ -78,16 +117,16 @@ export class GameInput {
     const pads = typeof navigator !== 'undefined' && navigator.getGamepads ? navigator.getGamepads() : [];
     for (const p of pads) {
       if (!p) continue;
-      const pressed = (i: number) => !!p.buttons[i]?.pressed;
       const ax = p.axes[0] ?? 0;
       const ay = p.axes[1] ?? 0;
-      if (ax < -0.4 || pressed(14)) this.pad.add('left');
-      if (ax > 0.4 || pressed(15)) this.pad.add('right');
-      if (ay < -0.5 || pressed(12)) this.pad.add('up');
-      if (ay > 0.5 || pressed(13)) this.pad.add('down');
-      if (pressed(0)) this.pad.add('jump');
-      if (pressed(1) || pressed(2) || pressed(3)) this.pad.add('action');
-      if (pressed(9)) this.pad.add('pause');
+      if (ax < -0.4) this.pad.add('left');
+      if (ax > 0.4) this.pad.add('right');
+      if (ay < -0.5) this.pad.add('up');
+      if (ay > 0.5) this.pad.add('down');
+      p.buttons.forEach((btn, i) => {
+        const b = btn?.pressed ? padButton(i) : null;
+        if (b) this.pad.add(b);
+      });
     }
   }
 
