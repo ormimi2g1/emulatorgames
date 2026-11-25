@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "@emulatorjs/core-fceumm": "^4.2.3",
+    "@emulatorjs/core-snes9x": "^4.2.3",
     "@emulatorjs/emulatorjs": "^4.2.3",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.5",

@@ -18,7 +18,7 @@
     return u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
   }
 
-  var CORES = { nes: 'nes' };
+  var CORES = { nes: 'nes', snes: 'snes' };
 
   function init(msg) {
     if (window.EJS_emulator || !CORES[msg.system]) return;

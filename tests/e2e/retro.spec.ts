@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { resolve } from 'node:path';
 
 const ROM = resolve(process.cwd(), 'tests/fixtures/color-test.nes');
+const SNES_ROM = resolve(process.cwd(), 'tests/fixtures/color-test.sfc');
 
 async function pressPin(page: Page, pin: string, submit: RegExp) {
   for (const d of pin) await page.getByRole('button', { name: d, exact: true }).click();
@@ -107,6 +108,38 @@ test('parent imports, tests and enables a retro game; a child plays, saves and c
   await page.getByRole('button', { name: 'Load' }).click();
   await page.getByRole('button', { name: /slot 1/i }).click();
   await expect(page.getByText(/loaded slot 1/i)).toBeVisible();
+});
+
+test('SNES: a parent imports a Super Nintendo game; a child plays it with the keyboard and saves', async ({ page }) => {
+  test.setTimeout(120_000);
+  await setup(page);
+  await page.goto('/parent/retro');
+  await pressPin(page, '2580', /^ok$/i);
+  await page.getByLabel(/1\. system/i).selectOption('snes');
+  await page.getByTestId('rom-input').setInputFiles(SNES_ROM);
+  await expect(page.getByText(/valid SNES game/i)).toBeVisible();
+  await page.getByRole('button', { name: 'Add game' }).click();
+  await page.getByRole('button', { name: '▶ Test' }).click();
+  await expect(page.getByText(/loading the console/i)).toBeHidden({ timeout: 30_000 });
+  await expect.poll(() => screenColor(page).then(isBlue), { timeout: 30_000 }).toBe(true);
+  await page.getByRole('button', { name: 'Exit' }).click();
+  await page.getByRole('button', { name: 'Leave' }).click();
+  await page.getByRole('checkbox', { name: /kids can play/i }).click();
+  await expect(page.getByRole('checkbox', { name: /kids can play/i })).toBeChecked();
+  await page.getByRole('button', { name: 'Lock' }).click();
+
+  await page.goto('/retro');
+  await page.getByRole('button', { name: '▶ Play' }).first().click();
+  await expect(page.getByText(/loading the console/i)).toBeHidden({ timeout: 30_000 });
+  await expect.poll(() => screenColor(page).then(isBlue), { timeout: 30_000 }).toBe(true);
+  await page.locator('iframe').click();
+  await page.keyboard.down('z');
+  await expect.poll(() => screenColor(page).then(isGreen), { timeout: 5000 }).toBe(true);
+  await page.keyboard.up('z');
+  await expect.poll(() => screenColor(page).then(isBlue), { timeout: 5000 }).toBe(true);
+  await page.getByRole('button', { name: 'Save' }).click();
+  await page.getByRole('button', { name: /slot 1/i }).click();
+  await expect(page.getByText(/saved in slot 1/i)).toBeVisible();
 });
 
 test('the retro console page cannot be opened for a game that is not enabled', async ({ page }) => {

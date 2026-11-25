@@ -30,9 +30,29 @@ export function validateNes(bytes: Uint8Array): string | null {
   return null;
 }
 
+const SNES_MAP_MODES = new Set([0x20, 0x21, 0x22, 0x23, 0x25, 0x30, 0x31, 0x32, 0x35]);
+
+/** Checks a SNES game file: optional 512-byte copier header, then a plausible internal header (LoROM, HiROM or ExHiROM). */
+export function validateSnes(bytes: Uint8Array): string | null {
+  const copier = bytes.length % 1024 === 512 ? 512 : 0;
+  const size = bytes.length - copier;
+  if (size < 32 * 1024) return "This doesn't look like a SNES game file (it is too small).";
+  if (size % 1024 !== 0) return 'This SNES file seems cut short or damaged.';
+  const at = (o: number) => bytes[copier + o];
+  const word = (o: number) => at(o) | (at(o + 1) << 8);
+  for (const h of [0x7fc0, 0xffc0, 0x40ffc0]) {
+    if (copier + h + 0x40 > bytes.length) continue;
+    const checksumOk = (word(h + 0x1c) ^ word(h + 0x1e)) === 0xffff;
+    const mapOk = SNES_MAP_MODES.has(at(h + 0x15) & 0xef);
+    const reset = word(h + 0x3c);
+    if ((checksumOk || mapOk) && reset >= 0x8000) return null;
+  }
+  return "This doesn't look like a SNES game file (no SNES header found).";
+}
+
 export const RETRO_SYSTEMS: RetroSystem[] = [
   { id: 'nes', name: 'NES', fullName: 'Nintendo Entertainment System', extensions: ['.nes'], maxBytes: 4 * MB, supported: true, validate: validateNes },
-  { id: 'snes', name: 'SNES', fullName: 'Super Nintendo Entertainment System', extensions: ['.sfc', '.smc'], maxBytes: 8 * MB, supported: false, validate: notYet },
+  { id: 'snes', name: 'SNES', fullName: 'Super Nintendo Entertainment System', extensions: ['.sfc', '.smc'], maxBytes: 8 * MB + 512, supported: true, validate: validateSnes },
   { id: 'gb', name: 'Game Boy', fullName: 'Game Boy', extensions: ['.gb'], maxBytes: 4 * MB, supported: false, validate: notYet },
   { id: 'gbc', name: 'Game Boy Color', fullName: 'Game Boy Color', extensions: ['.gbc'], maxBytes: 8 * MB, supported: false, validate: notYet },
   { id: 'gba', name: 'Game Boy Advance', fullName: 'Game Boy Advance', extensions: ['.gba'], maxBytes: 32 * MB, supported: false, validate: notYet },

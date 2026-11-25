@@ -303,7 +303,8 @@ export function RetroGames() {
       <section className="card flex flex-col gap-2 p-5">
         <h2 className="text-xl font-bold">Controls</h2>
         <ul className="muted list-disc pl-5">
-          <li>Keyboard: arrows move, Z = A button, X = B button, Enter = Start, V = Select.</li>
+          <li>NES keyboard: arrows move, Z = A button, X = B button, Enter = Start, V = Select.</li>
+          <li>SNES keyboard: arrows move, Z = A, X = B, A key = X, S = Y, Q = L, E = R, Enter = Start, V = Select.</li>
           <li>Phones and tablets show on-screen buttons automatically.</li>
           <li>USB and Bluetooth controllers work when the browser supports them. Change buttons or set up player 2 in the console's ⚙️ / 🎮 menu while a game runs.</li>
         </ul>

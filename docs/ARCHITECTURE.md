@@ -38,13 +38,13 @@ Schema changes are additive migrations in `src/data/db.ts` (`upgrade(oldVersion)
 
 ## Retro Console
 
-- EmulatorJS (NES core FCEUmm) is served from `public/emulatorjs/`; nothing loads from a CDN.
+- EmulatorJS (NES core FCEUmm, SNES core Snes9x) is served from `public/emulatorjs/`; nothing loads from a CDN. Each core (about 1 MB) is downloaded only when a game for that system first runs.
 - It runs in a same-origin iframe (`player.html`) with a strict Content Security Policy that only allows this app's own origin, so the emulator cannot contact netplay, update or tracking servers. Leaving the game removes the iframe, which stops its audio, loops and listeners.
 - The arcade sends the ROM bytes to the iframe with `postMessage`; save states come back the same way (`src/retro/emulatorBridge.ts`).
-- Import checks: supported system, file extension, size limit, and the iNES header (`src/retro/systems.ts`). Pictures are checked by their bytes (PNG/JPEG/WebP/GIF only, never SVG). Imported games start hidden; a parent must run **Test** successfully before switching a game on for kids.
+- Import checks: supported system, file extension, size limit, and the game's own header: iNES for NES; for SNES an optional 512-byte copier header, then a LoROM/HiROM/ExHiROM header with a valid checksum or map mode (`src/retro/systems.ts`). Pictures are checked by their bytes (PNG/JPEG/WebP/GIF only, never SVG). Imported games start hidden; a parent must run **Test** successfully before switching a game on for kids.
 - Auto-save every 60 s, when the app goes to the background (it also pauses), and on exit. Next launch continues from the auto-save.
 - The service worker caches the console on first use (`retro-console` cache), so a game that has been played once also works offline.
-- Only NES is supported. SNES, Game Boy (Color/Advance) and Genesis are listed as "coming later" until their cores are added and tested.
+- NES and SNES are supported. Game Boy (Color/Advance) and Genesis are listed as "coming later" until their cores are added and tested.
 
 ## Original games (Afa & Terdoo)
 
