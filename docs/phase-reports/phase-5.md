@@ -28,6 +28,11 @@ Date: 2026-11-25.
   - A new `playtime` store (database version 4), added as a migration so existing players, saves and retro games are kept.
   - Settings saved by older versions get the new control fields filled in.
   - Playtime is deleted with the player and included in the data export.
+- **Retro Console fixes from your report:**
+  - An SNES game stayed on "Loading the console…" inside Replit's preview, with "replit.com refused to connect". The console page used to open as a separate page inside a frame, and Replit's preview redirects such page loads to replit.com, which can't be shown in a frame. The console page is now fetched like any other file and opened from memory, so no separate page load happens. A browser test now refuses those page loads the same way and checks that the console still starts.
+  - If the console page doesn't answer within 30 seconds, a clear message replaces the endless "Loading".
+  - **Zipped games:** a `.zip` holding one game file can now be imported. It is unzipped on the device and nothing is uploaded. Zips with no matching file, several games, a password or damage get a plain explanation.
+- **Bugs found by CI and fixed:** quick changes in a row on the Playtime or Controllers pages could undo each other, and a fast double tap on "Add demo players" could add them twice.
 - **Already in place and checked again:** favorites (heart on game cards, "My Favorites" row), 9 positive badges with no streaks or penalties, and the 2-player mode in Memory Magic.
 
 ## 2. Features verified
@@ -40,7 +45,7 @@ Checked in headless Chromium at desktop (1280×800 and 1366×768) and Pixel 7 si
 - **Controllers:** the live test, capturing a new controller button and keyboard key, refusing a reserved key, saving across visits, and resetting to the usual buttons.
 
 ## 3. Tests executed and results
-- **Vitest: 125 of 125 passed.** New tests cover weekday and weekend allowances, the warning, hours (including across midnight and bedtime countdown), per-game caps, extensions, breaks and rests, summaries, storage and deletion, migrating old settings, and custom key and button mapping.
+- **Vitest: 128 of 128 passed.** New tests cover zip reading (compressed, stored, and helpful errors), weekday and weekend allowances, the warning, hours (including across midnight and bedtime countdown), per-game caps, extensions, breaks and rests, summaries, storage and deletion, migrating old settings, and custom key and button mapping.
 - **Playwright: 38 of 38 passed** on desktop and mobile, including 4 new family journeys (8 runs). The new journeys also passed 32 of 32 when repeated 4 times in parallel.
 - **Type check and production build:** pass.
 - **Fixed during testing:** the test-only playtime hook could appear before the day's saved time had loaded, which made one run flaky. It now appears after loading.

@@ -46,7 +46,7 @@ Memory Magic (1 or 2 players), Math Quest, Word Adventure, Space Explorer and Ra
 
 ## Retro games (NES and SNES)
 
-1. Parent Zone → **Retro Games** → choose the system (NES or SNES) and a `.nes`, `.sfc` or `.smc` file you own.
+1. Parent Zone → **Retro Games** → choose the system (NES or SNES) and a `.nes`, `.sfc` or `.smc` file you own. A `.zip` with one game file inside also works; it is unzipped on the device.
 2. Check the title, ages, difficulty, picture and which players can see it, then **Add game**.
 3. Tap **Test**. Once the game starts, switch on **Kids can play**.
 

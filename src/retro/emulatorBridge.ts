@@ -18,6 +18,29 @@ export type EmulatorCommand =
 
 export const PLAYER_URL = '/emulatorjs/player.html';
 
+/**
+ * The console page, as a same-origin blob: URL. Opening it this way means the
+ * iframe never navigates over the network. Some preview hosts (such as Replit's
+ * workspace preview) redirect nested page loads to a sign-in page that can't be
+ * framed, which left the console stuck on "Loading". Its scripts and the
+ * emulator files still load from /emulatorjs/ through the <base> tag.
+ * Falls back to the plain URL if the page can't be fetched.
+ */
+export async function playerFrameUrl(): Promise<{ url: string; revoke: () => void }> {
+  try {
+    const res = await fetch(PLAYER_URL, { cache: 'no-cache' });
+    if (!res.ok) throw new Error(String(res.status));
+    const html = await res.text();
+    if (!html.includes('player.js')) throw new Error('unexpected page');
+    const base = `<base href="${window.location.origin}/emulatorjs/" />`;
+    const doc = html.replace(/<head>/i, `<head>\n    ${base}`);
+    const url = URL.createObjectURL(new Blob([doc], { type: 'text/html' }));
+    return { url, revoke: () => URL.revokeObjectURL(url) };
+  } catch {
+    return { url: PLAYER_URL, revoke: () => undefined };
+  }
+}
+
 export class EmulatorBridge {
   private reqId = 0;
   private pending = new Map<number, (e: EmulatorEvent) => void>();
