@@ -1,3 +1,4 @@
+import type React from 'react';
 import type { Difficulty } from '../data/types';
 import type { GameInput } from './shared/input';
 
@@ -63,6 +64,8 @@ export interface GameDefinition {
   plannedPhase?: number;
   /** Lazily loaded game code. Required for original games when status is 'available'. */
   load?: () => Promise<GameModule>;
+  /** The game's own screen (menus and play), lazily loaded. Required for original games when status is 'available'. */
+  screen?: () => Promise<{ default: React.ComponentType }>;
   /** Set for parent-imported retro games; they run in the Retro Console instead of `load`. */
   retroId?: string;
 }

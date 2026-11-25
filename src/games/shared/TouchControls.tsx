@@ -48,7 +48,7 @@ function Pad({ input, button, label, icon, size }: { input: GameInput; button: G
 }
 
 /** On-screen controls for touch screens. Multi-touch: move and jump at the same time. */
-export function TouchControls({ input, large, leftHanded, actionLabel = 'Special' }: { input: GameInput; large?: boolean; leftHanded?: boolean; actionLabel?: string }) {
+export function TouchControls({ input, large, leftHanded, actionLabel = 'Special', steeringOnly }: { input: GameInput; large?: boolean; leftHanded?: boolean; actionLabel?: string; steeringOnly?: boolean }) {
   const size = large ? 92 : 72;
   const move = (
     <div className="flex gap-3">
@@ -56,6 +56,14 @@ export function TouchControls({ input, large, leftHanded, actionLabel = 'Special
       <Pad input={input} button="right" label="Move right" icon="▶" size={size} />
     </div>
   );
+  if (steeringOnly) {
+    return (
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between p-4 pb-[max(1rem,env(safe-area-inset-bottom))] opacity-90" data-testid="touch-controls">
+        <Pad input={input} button="left" label="Steer left" icon="◀" size={Math.round(size * 1.15)} />
+        <Pad input={input} button="right" label="Steer right" icon="▶" size={Math.round(size * 1.15)} />
+      </div>
+    );
+  }
   const act = (
     <div className="flex items-end gap-3">
       <Pad input={input} button="action" label={actionLabel} icon="✨" size={Math.round(size * 0.85)} />

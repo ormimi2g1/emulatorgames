@@ -30,15 +30,19 @@ The first time the app opens, a grown-up creates a **parent PIN** (there is no d
 
 ## Adding a game
 
-1. Implement a `GameModule` (see `src/games/types.ts`): `mount()` returns an instance with `start / pause / resume / restart / save / load / destroy`. `destroy` must stop loops, audio and listeners.
-2. Register it in `src/games/catalog.ts` with `load: () => import('./your-game')` so it is lazy-loaded.
-3. Only set `status: 'available'` once it is genuinely playable. A unit test enforces that available games have code.
+1. Build the game's screen as a default-exported React component. Simple games can use `useMiniGame`, `MiniGameFrame` and `ResultCard` from `src/games/shared/MiniGame.tsx`; action games can use `GameHost` with a `GameModule` (see `src/games/types.ts`), whose `destroy` must stop loops, audio and listeners.
+2. Register it in `src/games/catalog.ts` with `screen: () => import('./your-game/Screen')` so it is lazy-loaded.
+3. Only set `status: 'available'` once it is genuinely playable. A unit test enforces that available games have a screen.
 
 ## Afa & Terdoo: The Lost Rainbow Kingdom
 
 An original platformer with three worlds (Sunshine Meadows, Magical Forest, Crystal Caverns). Pick Afa (high jump, double jump, rainbow shield) or Terdoo (fast, small enough for tiny tunnels, turbo dash). Collect stars, find the rainbow crystal and the secret place in every world, and cheer up the Gloomy Cloud at the end.
 
 Keys: arrows or A/D to move, Space/Z/up to jump, X or Shift for the special move, Esc or P to pause. Phones and tablets get big on-screen buttons; controllers work too. The difficulty set for each player (Little Explorer, Adventurer, Super Hero) changes hearts, enemy speed and double jumping.
+
+## Mini-games
+
+Memory Magic (1 or 2 players), Math Quest, Word Adventure, Space Explorer and Rainbow Kart Racing. Each adapts to the player's difficulty, saves its best result per player and works offline.
 
 ## Retro games (NES)
 

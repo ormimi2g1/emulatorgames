@@ -16,8 +16,20 @@ describe('game catalog', () => {
 
   it('never marks a game available without loadable game code', () => {
     for (const g of GAMES) {
-      if (g.status === 'available') expect(typeof g.load).toBe('function');
-      expect(isPlayable(g)).toBe(g.status === 'available' && !!g.load);
+      if (g.status === 'available') expect(typeof g.screen).toBe('function');
+      expect(isPlayable(g)).toBe(g.status === 'available' && !!g.screen);
+    }
+  });
+
+  it('has every planned original game playable by Phase 4', () => {
+    expect(GAMES.map((g) => g.id).sort()).toEqual(['afa-terdoo', 'math-quest', 'memory-magic', 'rainbow-kart', 'space-explorer', 'word-adventure']);
+    expect(GAMES.every(isPlayable)).toBe(true);
+  });
+
+  it('loads every game screen as a component', async () => {
+    for (const g of GAMES) {
+      const mod = await g.screen!();
+      expect(typeof mod.default).toBe('function');
     }
   });
 
