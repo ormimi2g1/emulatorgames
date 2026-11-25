@@ -38,7 +38,7 @@ describe('file validation', () => {
   it('rejects wrong extensions, unsupported systems, empty, oversized and fake files', () => {
     expect(validateRomFile('nes', 'game.exe', ROM)).toMatch(/\.nes/);
     expect(validateRomFile('nes', 'game.nes.js', ROM)).toMatch(/\.nes/);
-    expect(validateRomFile('snes', 'game.sfc', ROM)).toMatch(/supported/);
+    expect(validateRomFile('gba', 'game.gba', ROM)).toMatch(/supported/);
     expect(validateRomFile('nes', 'game.nes', new Uint8Array())).toMatch(/empty/);
     expect(validateRomFile('nes', 'game.nes', new Uint8Array(5 * 1024 * 1024))).toMatch(/too big/);
     const fake = new TextEncoder().encode('<script>alert(1)</script>'.padEnd(20000, ' '));
@@ -137,5 +137,25 @@ describe('database upgrade', () => {
     v1.close();
     expect((await listProfiles()).map((p) => p.nickname)).toEqual(['Oldie']);
     expect(await listRetroGames()).toEqual([]);
+  });
+});
+
+describe('SNES files', () => {
+  const sfc = new Uint8Array(readFileSync(resolve(__dirname, '../../tests/fixtures/color-test.sfc')));
+
+  it('accepts the original SNES test program, with or without a copier header', () => {
+    expect(validateRomFile('snes', 'color-test.sfc', sfc)).toBeNull();
+    const headered = new Uint8Array(sfc.length + 512);
+    headered.set(sfc, 512);
+    expect(validateRomFile('snes', 'color-test.smc', headered)).toBeNull();
+  });
+
+  it('rejects files that are not SNES games', () => {
+    expect(validateRomFile('snes', 'x.sfc', new Uint8Array(1000))).toMatch(/too small/);
+    expect(validateRomFile('snes', 'x.sfc', new Uint8Array(64 * 1024))).toMatch(/no SNES header/);
+    const odd = new Uint8Array(sfc.length + 100);
+    odd.set(sfc);
+    expect(validateRomFile('snes', 'x.sfc', odd)).toMatch(/damaged/);
+    expect(validateRomFile('snes', 'game.nes', sfc)).toMatch(/\.sfc or \.smc/);
   });
 });
