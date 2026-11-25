@@ -14,6 +14,8 @@ async function setup(page: Page) {
   await page.getByRole('checkbox', { name: /wrote it down/i }).check();
   await page.getByRole('button', { name: /^next$/i }).click();
   await page.getByRole('button', { name: /afa & terdoo/i }).click();
+  // Wait for the player picker, so the next click can't hit the "Afa & Terdoo" button again.
+  await expect(page.getByRole('heading', { level: 1, name: "Who's playing?" })).toBeVisible();
   await page.getByRole('button', { name: /terdoo/i }).first().click();
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Terdoo');
 }
@@ -34,7 +36,51 @@ async function limitTerdoo(page: Page, minutes: string, breakEvery = 'Off') {
   await card.getByLabel('Games allowed from for Terdoo').fill('00:00');
   await card.getByLabel('Games end at for Terdoo').fill('00:00');
   await card.getByLabel('Break reminder for Terdoo').selectOption({ label: breakEvery });
+  // Each change saves in the background; wait until the last one is stored before leaving the page.
+  const breakMinutes = breakEvery === 'Off' ? 0 : Number(breakEvery.match(/\d+/)![0]);
+  await expect.poll(async () => (await storedProfile(page, 'Terdoo'))?.playtime).toMatchObject({ enabled: true, startTime: '00:00', endTime: '00:00', breakEveryMinutes: breakMinutes });
   return card;
+}
+
+/** The jump key as saved in IndexedDB settings. */
+function storedJumpKey(page: Page): Promise<string | null> {
+  return page.evaluate(
+    () =>
+      new Promise<string | null>((resolve, reject) => {
+        const open = indexedDB.open('kids-adventure-arcade');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const req = db.transaction('kv').objectStore('kv').get('settings');
+          req.onsuccess = () => {
+            db.close();
+            resolve((req.result as { controls?: { keys: { jump: string } } } | undefined)?.controls?.keys.jump ?? null);
+          };
+          req.onerror = () => reject(req.error);
+        };
+      }),
+  );
+}
+
+/** A player as saved in IndexedDB. */
+function storedProfile(page: Page, nickname: string): Promise<{ playtime?: unknown; playPaused?: boolean } | null> {
+  return page.evaluate(
+    (name) =>
+      new Promise<{ playtime?: unknown; playPaused?: boolean } | null>((resolve, reject) => {
+        const open = indexedDB.open('kids-adventure-arcade');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const req = db.transaction('profiles').objectStore('profiles').getAll();
+          req.onsuccess = () => {
+            db.close();
+            resolve((req.result as { nickname: string; playtime?: unknown; playPaused?: boolean }[]).find((p) => p.nickname === name) ?? null);
+          };
+          req.onerror = () => reject(req.error);
+        };
+      }),
+    nickname,
+  );
 }
 
 test('daily limit: warning, friendly stop, and a grown-up adds time with the PIN', async ({ page }, info) => {
@@ -102,6 +148,7 @@ test('"Pause play now" stops games until the parent switches it off', async ({ p
   const pauseBox = page.getByRole('checkbox', { name: 'Pause play now for Terdoo' });
   await pauseBox.click();
   await expect(pauseBox).toBeChecked();
+  await expect.poll(async () => (await storedProfile(page, 'Terdoo'))?.playPaused).toBe(true);
   await page.goto('/play/math-quest');
   const stop = page.getByTestId('playtime-stop');
   await expect(stop).toContainText('A grown-up paused the games.');
@@ -111,6 +158,7 @@ test('"Pause play now" stops games until the parent switches it off', async ({ p
   await parentTab(page, 'Playtime');
   await pauseBox.click();
   await expect(pauseBox).not.toBeChecked();
+  await expect.poll(async () => (await storedProfile(page, 'Terdoo'))?.playPaused).toBe(false);
   await page.goto('/play/math-quest');
   await expect(page.getByRole('button', { name: /start the quest/i })).toBeVisible();
   await expect(page.getByTestId('playtime-stop')).toHaveCount(0);
@@ -153,6 +201,7 @@ test('controllers: live test and button mapping (simulated gamepad)', async ({ p
   await info.attach('controllers', { body: await page.screenshot({ fullPage: true }), contentType: 'image/png' });
 
   // Saved for next time.
+  await expect.poll(() => storedJumpKey(page)).toBe('KeyJ');
   await parentTab(page, 'Controllers');
   await expect(page.getByRole('button', { name: 'Change keyboard key for jump' })).toHaveText('J');
   await page.getByRole('button', { name: /use the usual buttons/i }).click();

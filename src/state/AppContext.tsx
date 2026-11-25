@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { hasParentPin } from '../auth/pin';
 import { getActiveProfileId, listProfiles, saveProfile, setActiveProfileId, toggleFavorite as toggleFav } from '../data/profiles';
 import { loadSettings, saveSettings } from '../data/settings';
@@ -21,6 +21,8 @@ interface AppState {
   selectProfile: (id: string | null) => Promise<void>;
   updateSettings: (patch: Partial<AppSettings>) => Promise<void>;
   updateProfile: (p: ChildProfile) => Promise<void>;
+  /** Change a player starting from their latest values, so quick changes in a row never undo each other. */
+  patchProfile: (id: string, change: (p: ChildProfile) => ChildProfile) => Promise<void>;
   toggleFavorite: (gameId: string) => Promise<void>;
 }
 
@@ -47,13 +49,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setRetroGames(await listRetroGames());
   }, []);
 
+  // Bumped on every player switch, so a slower reload can't undo a choice made meanwhile.
+  const selection = useRef(0);
+
   const refresh = useCallback(async () => {
+    const picked = selection.current;
     const [pin, s, ps, a, rg] = await Promise.all([hasParentPin(), loadSettings(), listProfiles(), getActiveProfileId(), listRetroGames()]);
     setHasPin(pin);
     setRetroGames(rg);
     setSettings(s);
     setProfiles(ps);
-    setActiveId(a && ps.some((p) => p.id === a) ? a : null);
+    if (selection.current === picked) setActiveId(a && ps.some((p) => p.id === a) ? a : null);
     setReady(true);
   }, []);
 
@@ -70,22 +76,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [settings, activeProfile]);
 
   const selectProfile = useCallback(async (id: string | null) => {
+    selection.current++;
     await setActiveProfileId(id);
     setActiveId(id);
   }, []);
 
-  const updateSettings = useCallback(
-    async (patch: Partial<AppSettings>) => {
-      const next = { ...settings, ...patch };
-      await saveSettings(next);
-      setSettings(next);
-    },
-    [settings],
-  );
+  const settingsRef = useRef<AppSettings>(settings);
+  settingsRef.current = settings;
+  const savingSettings = useRef<Promise<unknown>>(Promise.resolve());
+  // Builds on the latest settings and saves in order, so quick changes never undo each other.
+  const updateSettings = useCallback(async (patch: Partial<AppSettings>) => {
+    const next = { ...settingsRef.current, ...patch };
+    settingsRef.current = next;
+    setSettings(next);
+    const run = savingSettings.current.then(() => saveSettings(next));
+    savingSettings.current = run.catch(() => undefined);
+    await run;
+  }, []);
+
+  const profilesRef = useRef<ChildProfile[]>([]);
+  profilesRef.current = profiles;
+  const saving = useRef<Promise<unknown>>(Promise.resolve());
 
   const updateProfile = useCallback(async (p: ChildProfile) => {
     await saveProfile(p);
     setProfiles((list) => (list.some((x) => x.id === p.id) ? list.map((x) => (x.id === p.id ? p : x)) : [...list, p]));
+  }, []);
+
+  const patchProfile = useCallback(async (id: string, change: (p: ChildProfile) => ChildProfile) => {
+    const current = profilesRef.current.find((x) => x.id === id);
+    if (!current) return;
+    const next = change(current);
+    // Show it at once, and save in order.
+    profilesRef.current = profilesRef.current.map((x) => (x.id === id ? next : x));
+    setProfiles(profilesRef.current);
+    const run = saving.current.then(() => saveProfile(next));
+    saving.current = run.catch(() => undefined);
+    await run;
   }, []);
 
   const toggleFavorite = useCallback(
@@ -98,8 +125,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ ready, hasPin, settings, profiles, activeProfile, retroGames, refreshRetro, refresh, selectProfile, updateSettings, updateProfile, toggleFavorite }),
-    [ready, hasPin, settings, profiles, activeProfile, retroGames, refreshRetro, refresh, selectProfile, updateSettings, updateProfile, toggleFavorite],
+    () => ({ ready, hasPin, settings, profiles, activeProfile, retroGames, refreshRetro, refresh, selectProfile, updateSettings, updateProfile, patchProfile, toggleFavorite }),
+    [ready, hasPin, settings, profiles, activeProfile, retroGames, refreshRetro, refresh, selectProfile, updateSettings, updateProfile, patchProfile, toggleFavorite],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

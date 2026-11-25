@@ -26,7 +26,7 @@ function Select({ label, value, options, format, onChange }: { label: string; va
 }
 
 function PlayerRules({ profile }: { profile: ChildProfile }) {
-  const { updateProfile, retroGames } = useApp();
+  const { patchProfile, retroGames } = useApp();
   const rules: PlaytimeRules = { ...DEFAULT_PLAYTIME, ...profile.playtime };
   const [today, setToday] = useState<DayUsage | null>(null);
   const name = profile.nickname;
@@ -38,7 +38,7 @@ function PlayerRules({ profile }: { profile: ChildProfile }) {
     return () => window.clearInterval(t);
   }, [reload]);
 
-  const set = (patch: Partial<PlaytimeRules>) => void updateProfile({ ...profile, playtime: { ...rules, ...patch } });
+  const set = (patch: Partial<PlaytimeRules>) => void patchProfile(profile.id, (p) => ({ ...p, playtime: { ...DEFAULT_PLAYTIME, ...p.playtime, ...patch } }));
   const changeToday = async (next: DayUsage) => {
     await saveDay(next);
     setToday(next);
@@ -62,7 +62,7 @@ function PlayerRules({ profile }: { profile: ChildProfile }) {
       </div>
 
       <label className="flex min-h-11 items-center gap-3 font-semibold">
-        <input type="checkbox" className="h-6 w-6 accent-purple" checked={!!profile.playPaused} onChange={(e) => void updateProfile({ ...profile, playPaused: e.target.checked })} aria-label={`Pause play now for ${name}`} />
+        <input type="checkbox" className="h-6 w-6 accent-purple" checked={!!profile.playPaused} onChange={(e) => void patchProfile(profile.id, (p) => ({ ...p, playPaused: e.target.checked }))} aria-label={`Pause play now for ${name}`} />
         ✋ Pause play now <span className="muted font-normal">(stops games right away until you switch it off)</span>
       </label>
 
@@ -98,7 +98,13 @@ function PlayerRules({ profile }: { profile: ChildProfile }) {
                     className="input w-auto"
                     aria-label={`Daily limit for ${g.title} for ${name}`}
                     value={rules.gameMinutes[g.id] ?? 0}
-                    onChange={(e) => set({ gameMinutes: { ...rules.gameMinutes, [g.id]: Number(e.target.value) } })}
+                    onChange={(e) => {
+                      const minutes = Number(e.target.value);
+                      void patchProfile(profile.id, (p) => {
+                        const cur = { ...DEFAULT_PLAYTIME, ...p.playtime };
+                        return { ...p, playtime: { ...cur, gameMinutes: { ...cur.gameMinutes, [g.id]: minutes } } };
+                      });
+                    }}
                   >
                     {GAME_CAPS.map((n) => (
                       <option key={n} value={n}>{n ? `${n} min a day` : 'No extra limit'}</option>
