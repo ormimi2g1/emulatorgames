@@ -52,3 +52,7 @@ Schema changes are additive migrations in `src/data/db.ts` (`upgrade(oldVersion)
 - `src/games/afa-terdoo/`: menus in React (`AfaTerdooScreen`), the level in Phaser (`LevelScene`, loaded only when a level starts, about 330 KB gzipped, precached for offline play). Levels are text grids in `levels.ts`; scoring, unlocks and badges are plain functions in `rules.ts` with unit tests. Art is drawn in code (`art.ts`), sounds are synthesized (`sfx.ts`).
 - No game over: losing every heart says "Great try!" and returns the player to the last checkpoint. Bouncing on critters cheers them up rather than defeating them.
 - `?testhooks=1` exposes `window.__afa` (state and teleport) for the browser tests only; it changes nothing else.
+
+## Mini-games
+
+Memory Magic, Math Quest and Word Adventure are plain React (big buttons, screen-reader friendly). Space Explorer and Rainbow Kart draw on a `<canvas>` with a small engine class each (`engine.ts`) that has no drawing code, so it is unit tested. All of them share `src/games/shared/MiniGame.tsx` (frame, results, best scores in the `progress` store, badges) and `tones.ts` (synthesized sounds). Rounds can be replayed with `?seed=N`, which the browser tests use.

@@ -61,16 +61,15 @@ describe('first run', () => {
 });
 
 describe('arcade', () => {
-  it('shows the home screen: the platformer is playable, coming-soon games cannot be launched', async () => {
+  it('shows the home screen with playable games for the active player', async () => {
     await seed();
     renderAt('/');
     expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('Afa');
-    const afa = screen.getAllByTestId('game-card-afa-terdoo')[0];
-    expect(afa).not.toHaveTextContent(/coming soon/i);
-    expect(within(afa).getByRole('button', { name: /^▶ play$/i })).toBeInTheDocument();
-    const kart = screen.getAllByTestId('game-card-rainbow-kart')[0];
-    expect(kart).toHaveTextContent(/coming soon/i);
-    expect(within(kart).queryByRole('button', { name: /^▶ play$/i })).toBeNull();
+    for (const id of ['afa-terdoo', 'memory-magic']) {
+      const card = screen.getAllByTestId(`game-card-${id}`)[0];
+      expect(card).not.toHaveTextContent(/coming soon/i);
+      expect(within(card).getByRole('button', { name: /^▶ play$/i })).toBeInTheDocument();
+    }
   });
 
   it('lets a player favorite a game', async () => {

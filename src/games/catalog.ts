@@ -2,8 +2,8 @@ import type { ChildProfile } from '../data/types';
 import type { GameCategory, GameDefinition } from './types';
 
 /**
- * The game registry. To add a game: implement a GameModule, add an entry
- * here with `load: () => import('./my-game').then(m => m.default)` and set
+ * The game registry. To add a game: build its screen, add an entry
+ * here with `screen: () => import('./my-game/Screen')` (a default-exported React screen) and set
  * status to 'available' only once it is genuinely playable.
  */
 export const GAMES: GameDefinition[] = [
@@ -22,8 +22,8 @@ export const GAMES: GameDefinition[] = [
     status: 'available',
     version: '1.0.0',
     plannedPhase: 2,
-    // The game screen renders its own menus; this marks it as genuinely playable.
     load: () => import('./afa-terdoo').then((m) => m.default),
+    screen: () => import('./afa-terdoo/AfaTerdooScreen'),
   },
   {
     id: 'rainbow-kart',
@@ -34,12 +34,13 @@ export const GAMES: GameDefinition[] = [
     ageMax: 10,
     difficulties: ['little-explorer', 'adventurer', 'super-hero'],
     controls: ['keyboard', 'touch', 'gamepad'],
-    players: { min: 1, max: 2 },
+    players: { min: 1, max: 1 },
     offline: true,
     saves: false,
-    status: 'coming-soon',
-    version: '0.0.0',
+    status: 'available',
+    version: '1.0.0',
     plannedPhase: 4,
+    screen: () => import('./rainbow-kart/RainbowKart'),
   },
   {
     id: 'memory-magic',
@@ -53,9 +54,10 @@ export const GAMES: GameDefinition[] = [
     players: { min: 1, max: 2 },
     offline: true,
     saves: false,
-    status: 'coming-soon',
-    version: '0.0.0',
+    status: 'available',
+    version: '1.0.0',
     plannedPhase: 4,
+    screen: () => import('./memory-magic/MemoryMagic'),
   },
   {
     id: 'math-quest',
@@ -69,9 +71,10 @@ export const GAMES: GameDefinition[] = [
     players: { min: 1, max: 1 },
     offline: true,
     saves: true,
-    status: 'coming-soon',
-    version: '0.0.0',
+    status: 'available',
+    version: '1.0.0',
     plannedPhase: 4,
+    screen: () => import('./math-quest/MathQuest'),
   },
   {
     id: 'space-explorer',
@@ -85,9 +88,10 @@ export const GAMES: GameDefinition[] = [
     players: { min: 1, max: 1 },
     offline: true,
     saves: false,
-    status: 'coming-soon',
-    version: '0.0.0',
+    status: 'available',
+    version: '1.0.0',
     plannedPhase: 4,
+    screen: () => import('./space-explorer/SpaceExplorer'),
   },
   {
     id: 'word-adventure',
@@ -101,9 +105,10 @@ export const GAMES: GameDefinition[] = [
     players: { min: 1, max: 1 },
     offline: true,
     saves: true,
-    status: 'coming-soon',
-    version: '0.0.0',
+    status: 'available',
+    version: '1.0.0',
     plannedPhase: 4,
+    screen: () => import('./word-adventure/WordAdventure'),
   },
 ];
 
@@ -120,7 +125,7 @@ export function getGame(id: string): GameDefinition | undefined {
 }
 
 export function isPlayable(game: GameDefinition): boolean {
-  return game.status === 'available' && (typeof game.load === 'function' || !!game.retroId);
+  return game.status === 'available' && (typeof game.screen === 'function' || !!game.retroId);
 }
 
 /** Games this profile may see: not disabled by the parent and assigned to the profile. */

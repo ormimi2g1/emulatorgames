@@ -330,3 +330,5 @@ function ControlsHelp() {
     </details>
   );
 }
+
+export default AfaTerdooScreen;
